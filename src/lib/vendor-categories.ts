@@ -1,0 +1,15 @@
+export const VENDOR_CATEGORY_LABEL: Record<string, string> = {
+  espaco: "Espaço",
+  buffet: "Buffet",
+  fotografia: "Fotografia",
+  video: "Vídeo",
+  cerimonial: "Cerimonial",
+  decoracao: "Decoração",
+  "musica-e-dj": "Música e DJ",
+  beleza: "Beleza",
+  "vestido-e-traje": "Vestido e traje",
+  "doces-e-bolo": "Doces e bolo",
+  convites: "Convites",
+  transporte: "Transporte",
+  "lua-de-mel": "Lua de mel",
+};

@@ -1,0 +1,175 @@
+rules_version = '2';
+
+// Postura: negar por padrão. Ver plano §06 "Segurança, regras e LGPD".
+// Escrita sensível (dinheiro, papéis, moderação, tokens de convite) só por
+// Admin SDK (Cloud Functions / Server Actions) — nunca pelo cliente.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(coupleData) {
+      return isSignedIn() && request.auth.uid in coupleData.members;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.roles is list
+        && 'admin' in request.auth.token.roles;
+    }
+
+    function isVendorOwner(vendorData) {
+      return isSignedIn() && request.auth.uid == vendorData.ownerUid;
+    }
+
+    // ---------- users ----------
+    match /users/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow update: if isSignedIn() && request.auth.uid == uid
+        && !request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['roles']);
+      allow create: if isSignedIn() && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // ---------- slugs (reserva única por transação) ----------
+    match /slugs/{slug} {
+      allow read: if true;
+      allow write: if false; // só Admin SDK, dentro da transação de criação do casal
+    }
+
+    // ---------- couples ----------
+    match /couples/{coupleId} {
+      allow read: if resource.data.published == true || isMember(resource.data) || isAdmin();
+      allow create: if false; // criação via Cloud Function (reserva de slug + doc em transação)
+      allow update: if isMember(resource.data)
+        && !request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['members', 'planTier', 'stats', 'slug']);
+      allow delete: if false;
+
+      match /guests/{guestId} {
+        allow read, write: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data);
+        // RSVP público do convidado (sem conta) é gravado por Server Action/Function
+        // validando o token assinado — não pela regra do cliente.
+      }
+
+      match /tables/{tableId} {
+        allow read, write: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data);
+      }
+
+      match /giftItems/{giftId} {
+        allow read: if true; // catálogo público na página de presentes
+        allow create, update, delete: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data)
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['quotas']);
+      }
+
+      match /checklist/{taskId} {
+        allow read, write: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data);
+      }
+
+      match /budgetItems/{itemId} {
+        allow read, write: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data);
+      }
+    }
+
+    // ---------- vendors ----------
+    match /vendors/{vendorId} {
+      allow read: if resource.data.status == 'active' || isVendorOwner(resource.data) || isAdmin();
+      allow create: if isSignedIn(); // status inicia 'pending', verificação via backoffice
+      allow update: if isVendorOwner(resource.data)
+        && !request.resource.data.diff(resource.data)
+             .affectedKeys().hasAny(['verified', 'planTier', 'rating', 'responseTimeMins', 'status']);
+      allow delete: if false;
+
+      match /packages/{packageId} {
+        allow read: if true;
+        allow write: if isVendorOwner(get(/databases/$(database)/documents/vendors/$(vendorId)).data);
+      }
+
+      match /busyDates/{yearMonth} {
+        allow read: if true;
+        allow write: if isVendorOwner(get(/databases/$(database)/documents/vendors/$(vendorId)).data);
+      }
+    }
+
+    // ---------- reviews (raiz — moderação varre tudo) ----------
+    match /reviews/{reviewId} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if isSignedIn(); // status inicia 'pending'
+      allow update: if false; // aprovação/edição via backoffice; resposta do fornecedor via Function
+      allow delete: if false;
+    }
+
+    // ---------- leads ----------
+    match /leads/{leadId} {
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.coupleUid ||
+         isVendorOwner(get(/databases/$(database)/documents/vendors/$(resource.data.vendorId)).data) ||
+         isAdmin());
+      allow create: if isSignedIn();
+      allow update: if false; // status e desmascaramento de contato via Function
+      allow delete: if false;
+    }
+
+    // ---------- conversations ----------
+    match /conversations/{conversationId} {
+      allow read: if isSignedIn() && request.auth.uid in resource.data.participants;
+      allow create: if false; // criada pela Function ao aceitar o lead
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+        allow create: if isSignedIn()
+          && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants
+          && request.resource.data.senderUid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- financeiro: leitura restrita, escrita bloqueada para qualquer cliente ----------
+    match /orders/{orderId} {
+      allow read: if isSignedIn() &&
+        (isMember(get(/databases/$(database)/documents/couples/$(resource.data.coupleId)).data) || isAdmin());
+      allow write: if false; // só Admin SDK
+    }
+
+    match /wallets/{coupleId} {
+      allow read: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data) || isAdmin();
+      allow write: if false;
+
+      match /ledger/{entryId} {
+        allow read: if isMember(get(/databases/$(database)/documents/couples/$(coupleId)).data) || isAdmin();
+        allow write: if false;
+      }
+    }
+
+    match /withdrawals/{withdrawalId} {
+      allow read: if isSignedIn() &&
+        (isMember(get(/databases/$(database)/documents/couples/$(resource.data.coupleId)).data) || isAdmin());
+      allow write: if false;
+    }
+
+    match /webhookEvents/{eventId} {
+      allow read, write: if false; // só Admin SDK
+    }
+
+    // ---------- conteúdo público ----------
+    match /cities/{cityId} { allow read: if true; allow write: if false; }
+    match /categories/{categoryId} { allow read: if true; allow write: if false; }
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if false;
+    }
+    match /realWeddings/{weddingId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if false;
+    }
+
+    // ---------- auditoria ----------
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+  }
+}
