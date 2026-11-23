@@ -21,9 +21,9 @@ bucket_name = "ns-convites"
 [vars]
 LIBERAR_SEM_PAGAMENTO = "0"
 # Remetente dos e-mails (domínio verificado no Resend)
-EMAIL_REMETENTE = "NS Convites <convites@SEU-DOMINIO.com.br>"
+EMAIL_REMETENTE = "NS Convites <convites@nsnexus.com.br>"
 # Endereço público do site, usado nos links dos e-mails
-SITE_URL = "https://ns-convites.pages.dev"
+SITE_URL = "https://convites.nsnexus.com.br"
 # Opcional: domínio próprio ligado ao bucket R2 (ex.: https://arquivos.seudominio.com.br)
 # ARQUIVOS_URL = ""
 
