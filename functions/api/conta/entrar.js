@@ -1,20 +1,24 @@
-import { json, um, rodar } from '../../_lib/util.js';
-import { hash, iguais, criarCookie, apagarCookie } from '../../_lib/auth.js';
+import { json, um, emailValido } from '../../_lib/util.js';
+import { criarCookie, apagarCookie } from '../../_lib/auth.js';
+import { normalizarWhatsapp } from '../../_lib/config.js';
 
-// POST /api/conta/entrar {email, codigo} -> cria a sessão do cliente
+// Busca exata pelo contato informado no pedido, sem código por e-mail.
 export async function onRequestPost({ request, env }) {
   const b = await request.json().catch(() => ({}));
-  const email = String(b.email || '').trim().toLowerCase(), codigo = String(b.codigo || '').replace(/\D/g, '');
-  const c = await um(env, 'SELECT codigo_hash, expira, tentativas FROM codigos_login WHERE email = ?', email);
-  const falha = json({ erro: 'Código incorreto ou vencido. Peça outro.' }, 401);
-  if (!c || c.expira < Date.now() || c.tentativas >= 5) return falha;
-  if (!iguais(await hash(env, `${email}:${codigo}`), c.codigo_hash)) {
-    await rodar(env, 'UPDATE codigos_login SET tentativas = tentativas + 1 WHERE email = ?', email);
-    return falha;
+  const contato = String(b.contato || '').trim();
+  let sessao;
+  if (contato.includes('@')) {
+    const email = contato.toLowerCase();
+    if (!emailValido(email)) return json({ erro: 'Confira o e-mail informado.' }, 400);
+    const cli = await um(env, 'SELECT id FROM clientes WHERE email = ?', email);
+    if (cli) sessao = cli.id;
+  } else {
+    const numero = normalizarWhatsapp(contato);
+    if (!numero) return json({ erro: 'Informe um e-mail válido ou WhatsApp com DDD.' }, 400);
+    const cli = await um(env, 'SELECT id FROM clientes WHERE whatsapp IN (?, ?) LIMIT 1', numero, numero.slice(2));
+    if (cli) sessao = 'zap-' + numero;
   }
-  await rodar(env, 'DELETE FROM codigos_login WHERE email = ?', email);
-  const cli = await um(env, 'SELECT id FROM clientes WHERE email = ?', email);
-  if (!cli) return falha;
-  return json({ ok: true }, 200, { 'set-cookie': await criarCookie(env, 'nscli', cli.id, 30) });
+  if (!sessao) return json({ erro: 'Nenhum convite encontrado. Confira se usou o mesmo e-mail ou WhatsApp do pedido.' }, 404);
+  return json({ ok: true }, 200, { 'cache-control': 'no-store', 'set-cookie': await criarCookie(env, 'nscli', sessao, 30) });
 }
 export const onRequestDelete = () => json({ ok: true }, 200, { 'set-cookie': apagarCookie('nscli') });

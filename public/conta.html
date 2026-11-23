@@ -12,7 +12,6 @@ main{padding:40px 0 96px;max-width:760px}
 .entrar{max-width:420px;margin:40px auto;display:grid;gap:8px}
 .entrar h1{font-size:2.4rem;margin-bottom:8px}
 .entrar p{color:var(--tinta-2);margin-bottom:16px}
-.codigo{letter-spacing:.4em;font:700 1.6rem var(--disp)!important;text-align:center}
 .link-sec{border:0;background:none;color:var(--festa-esc);font:600 .95rem var(--corpo);cursor:pointer;padding:6px 0;justify-self:start}
 .topo-conta{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:28px}
 .topo-conta h1{font-size:2.4rem}
@@ -47,25 +46,14 @@ main{padding:40px 0 96px;max-width:760px}
 
   <section id="telaEmail" class="entrar" hidden>
     <h1>Meus convites</h1>
-    <p>Digite o e-mail que você usou no pedido. Vamos mandar um código para você entrar.</p>
+    <p>Informe o e-mail ou WhatsApp usado no pedido para encontrar seus convites.</p>
     <form id="formEmail">
-      <div class="campo"><label for="email">E-mail</label><input id="email" type="email" autocomplete="email" required></div>
+      <div class="campo"><label for="contato">E-mail ou WhatsApp</label><input id="contato" type="text" autocomplete="username" placeholder="Seu e-mail ou WhatsApp com DDD" required></div>
       <p class="erro" id="erroEmail" hidden></p>
-      <button class="bt bt-festa" style="width:100%">Receber código</button>
+      <button class="bt bt-festa" style="width:100%">Buscar meus convites</button>
     </form>
   </section>
 
-  <section id="telaCodigo" class="entrar" hidden>
-    <h1>Confira seu e-mail</h1>
-    <p id="txtCodigo"></p>
-    <form id="formCodigo">
-      <div class="campo"><label for="codigo">Código de 6 dígitos</label><input id="codigo" class="codigo" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></div>
-      <p class="erro" id="erroCodigo" hidden></p>
-      <button class="bt bt-festa" style="width:100%">Entrar</button>
-    </form>
-    <button class="link-sec" id="outroEmail">Usar outro e-mail</button>
-    <a class="link-sec" data-zap="Olá! Não estou conseguindo entrar em Meus convites." hidden>Não recebeu o código? Fale no WhatsApp</a>
-  </section>
 
   <section id="telaLista" hidden>
     <div class="topo-conta"><div><h1>Meus convites</h1><span id="quem"></span></div><a class="bt bt-linha" href="/#modelos">Fazer outro convite</a></div>
@@ -86,6 +74,6 @@ main{padding:40px 0 96px;max-width:760px}
     <div class="secao-c"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><h2 style="margin:0">Lista de convidados</h2><button class="bt bt-linha" id="cPlanilha" style="padding:.6em 1.1em">Baixar planilha</button></div><div id="respostas"></div></div>
   </section>
 </main>
-<script type="module" src="/assets/js/conta.js"></script>
+<script type="module" src="/assets/js/conta.js?v=20261123-busca"></script>
 </body>
 </html>

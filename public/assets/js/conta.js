@@ -1,11 +1,10 @@
 import { CONFIG, reais, ligarSuporte } from './config.js';
 ligarSuporte();
 const $ = id => document.getElementById(id);
-const telas = ['telaEmail', 'telaCodigo', 'telaLista', 'telaConvite'];
+const telas = ['telaEmail', 'telaLista', 'telaConvite'];
 const mostrar = t => { telas.forEach(x => $(x).hidden = x !== t); $('sair').hidden = !['telaLista', 'telaConvite'].includes(t); scrollTo(0, 0); };
 const dataBR = d => new Date(`${d}T12:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 const NOME_ST = { aguardando_pagamento: 'Aguardando pagamento', pago: 'No ar', publicado: 'No ar', cancelado: 'Cancelado' };
-let email = '';
 
 async function api(caminho, opcoes = {}) {
   const r = await fetch(`/api/conta/${caminho}`, { method: opcoes.metodo || 'GET', headers: opcoes.corpo ? { 'content-type': 'application/json' } : {}, body: opcoes.corpo ? JSON.stringify(opcoes.corpo) : undefined });
@@ -18,26 +17,20 @@ const erro = (id, t) => { $(id).textContent = t; $(id).hidden = !t; };
 
 $('formEmail').onsubmit = async e => {
   e.preventDefault(); erro('erroEmail', '');
-  email = $('email').value.trim().toLowerCase();
-  const bt = e.submitter; bt.disabled = true;
+  const contato = $('contato').value.trim();
+  const bt = e.submitter || $('formEmail').querySelector('button');
+  bt.disabled = true; bt.textContent = 'Buscando…';
   try {
-    await api('codigo', { metodo: 'POST', corpo: { email } });
-    $('txtCodigo').textContent = `Se ${email} tiver pedidos com a gente, o código chega em instantes. Olhe também a caixa de spam.`;
-    mostrar('telaCodigo'); $('codigo').focus();
-  } catch (err) { erro('erroEmail', err.message); }
-  bt.disabled = false;
-};
-$('outroEmail').onclick = () => { $('codigo').value = ''; mostrar('telaEmail'); };
-$('formCodigo').onsubmit = async e => {
-  e.preventDefault(); erro('erroCodigo', '');
-  try { await api('entrar', { metodo: 'POST', corpo: { email, codigo: $('codigo').value } }); carregarLista(); }
-  catch (err) { erro('erroCodigo', err.message); }
+    await api('entrar', { metodo: 'POST', corpo: { contato } });
+    await carregarLista();
+  } catch (err) { mostrar('telaEmail'); erro('erroEmail', err.message); }
+  finally { bt.disabled = false; bt.textContent = 'Buscar meus convites'; }
 };
 $('sair').onclick = async () => { await api('entrar', { metodo: 'DELETE' }).catch(() => {}); mostrar('telaEmail'); };
 
 async function carregarLista() {
   const j = await api('convites');
-  $('quem').textContent = j.cliente?.email || '';
+  $('quem').textContent = j.cliente?.contato || j.cliente?.email || '';
   const l = $('lista'); l.textContent = '';
   if (!j.convites.length) l.innerHTML = '<p style="color:var(--tinta-2)">Você ainda não tem convites. <a href="/#modelos">Escolha um modelo</a> para começar.</p>';
   j.convites.forEach(c => {
