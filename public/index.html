@@ -17,11 +17,10 @@
   <div class="cont">
     <a class="marca" href="/">ns<b>.</b>convites</a>
     <nav>
-      <a href="#modelos">Modelos</a>
       <a href="#como-funciona">Como funciona</a>
       <a href="#precos">Preços</a>
       <a href="/conta">Meus convites</a>
-      <a class="bt bt-festa" href="#modelos">Criar convite</a>
+      <a class="bt bt-festa" href="/criar">Criar convite</a>
     </nav>
   </div>
 </header>
@@ -33,7 +32,7 @@
       <h1>Sua festa começa com um convite que dá vontade de abrir.</h1>
       <p class="sub">Crie um convite com o tema da sua festa, sua foto e todos os detalhes. Compartilhe pelo WhatsApp e acompanhe quem confirmou presença, tudo no mesmo lugar.</p>
       <div class="acoes">
-        <a class="bt bt-festa" href="#modelos">Escolher modelo</a>
+        <a class="bt bt-festa" href="/criar">Criar convite</a>
         <a class="bt bt-linha" href="#como-funciona">Ver como funciona</a>
       </div>
       <p class="preco-linha"><strong data-preco="convite">R$ 39,90</strong> por convite, pronto para mandar no WhatsApp.</p>
@@ -50,18 +49,6 @@
         <small>A foto fica só no seu aparelho. Nada é enviado.</small>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="secao" id="modelos" style="padding-top:40px">
-  <div class="cont">
-    <div class="cabeca">
-      <div>
-        <h2>Escolha o tema</h2>
-      </div>
-      <div class="abas" role="tablist" id="abas"></div>
-    </div>
-    <div class="vitrine" id="vitrine"></div>
   </div>
 </section>
 
@@ -105,7 +92,7 @@
           <li>Link do convite com confirmação de presença</li>
           <li>Painel com a lista de quem confirmou</li>
         </ul>
-        <a class="bt" href="#modelos">Escolher modelo</a>
+        <a class="bt" href="/criar">Criar convite</a>
       </div>
       <div class="plano">
         <h3>Adicionais</h3>
@@ -134,22 +121,7 @@
   <div class="cont"><span>NS Convites</span><span style="display:flex;gap:20px"><a href="/conta">Meus convites</a><a href="#" id="linkZap" data-zap="Olá! Tenho uma dúvida sobre os convites.">Falar no WhatsApp</a></span></div>
 </footer>
 
-<dialog class="modal" id="modal" aria-label="Prévia do modelo">
-  <button class="fechar" id="fechar" aria-label="Fechar">×</button>
-  <div class="modal-in">
-    <div class="modal-caixa">
-      <div class="celular"><canvas id="modalCanvas"></canvas><video id="modalVid" class="vid-oculto" playsinline crossorigin="anonymous" preload="auto"></video></div>
-      <div>
-        <span id="modalCat" style="color:var(--ouro);font-weight:600"></span>
-        <h3 id="modalNome"></h3>
-        <p>Toque no vídeo para ouvir o som. A foto aparece na moldura no final.</p>
-        <a class="bt bt-festa" id="modalUsar" href="#">Usar este modelo</a>
-      </div>
-    </div>
-  </div>
-</dialog>
-
 <script type="module" src="/assets/js/config.js"></script>
-<script type="module" src="/assets/js/landing.js"></script>
+<script type="module" src="/assets/js/landing.js?v=20261123-sem-vitrine"></script>
 </body>
 </html>

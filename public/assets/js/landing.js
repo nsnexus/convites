@@ -1,9 +1,8 @@
 import { Compositor, carregarModelos, fotoExemplo } from './compositor.js';
-import { zap, ligarSuporte, ligarPrecos, carregarConfig, CONFIG } from './config.js';
+import { ligarSuporte, ligarPrecos, carregarConfig } from './config.js';
 
 const [dados] = await Promise.all([carregarModelos(), carregarConfig()]);
 const porId = Object.fromEntries(dados.modelos.map(m => [m.id, m]));
-const nomeCat = Object.fromEntries(dados.categorias.map(c => [c.id, c.nome]));
 
 // Foto: a do visitante (se ele testou) ou a de exemplo
 let foto = fotoExemplo();
@@ -48,46 +47,5 @@ document.getElementById('fotoTeste').addEventListener('change', async e => {
   hv.currentTime = Math.max(0, destaque[hi].inicio / 24 - .3); hv.play().catch(() => {});
 });
 
-// ---------- vitrine ----------
-const abas = document.getElementById('abas'), vitrine = document.getElementById('vitrine');
-let catAtual = dados.categorias[0].id;
-dados.categorias.forEach(c => {
-  const b = document.createElement('button'); b.role = 'tab'; b.textContent = c.nome;
-  b.setAttribute('aria-selected', c.id === catAtual);
-  b.onclick = () => { catAtual = c.id; abas.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', x === b)); render(); };
-  abas.append(b);
-});
-function render() {
-  vitrine.innerHTML = '';
-  dados.modelos.filter(m => m.categoria === catAtual).forEach(m => {
-    const b = document.createElement('button'); b.className = 'card-modelo';
-    b.innerHTML = `<div class="capa"><img src="${m.poster}" alt="" loading="lazy"><span class="play" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="#26122E"><path d="M7 4v16l13-8z"/></svg></span></div><h3>${m.nome}</h3><span>${nomeCat[m.categoria]}</span>`;
-    b.onclick = () => abrir(m);
-    vitrine.append(b);
-  });
-  const ex = document.createElement('a'); ex.className = 'card-modelo card-exclusivo'; ex.dataset.zap = 'Olá! Quero um modelo de convite exclusivo.';
-  if (CONFIG.whatsapp) { ex.href = zap(ex.dataset.zap); ex.target = '_blank'; ex.rel = 'noopener'; } else ex.href = '#';
-  ex.innerHTML = `<div class="capa"><p>Não achou o tema? Criamos um só seu.</p></div><h3>Modelo exclusivo</h3><span>Sob orçamento</span>`;
-  vitrine.append(ex);
-}
-render();
-
-// ---------- modal ----------
-const modal = document.getElementById('modal'), mv = document.getElementById('modalVid');
-let comp;
-function abrir(m) {
-  document.getElementById('modalNome').textContent = m.nome;
-  document.getElementById('modalCat').textContent = nomeCat[m.categoria];
-  document.getElementById('modalUsar').href = `/criar?modelo=${m.id}`;
-  modal.showModal(); hero && hv.pause();
-  if (!comp) { comp = new Compositor(document.getElementById('modalCanvas'), mv, m); comp.definirFoto(foto); mv.src = m.video; }
-  else { comp.definirFoto(foto); comp.trocarModelo(m); }
-  mv.muted = false; mv.loop = true;
-  mv.play().catch(() => { mv.muted = true; mv.play(); });
-}
-document.getElementById('modalCanvas').onclick = () => { mv.muted = !mv.muted; if (mv.paused) mv.play(); };
-modal.addEventListener('close', () => { mv.pause(); hero && hv.play().catch(() => {}); });
-document.getElementById('fechar').onclick = () => modal.close();
-modal.addEventListener('click', e => { if (e.target.classList.contains('modal-in')) modal.close(); });
 
 ligarSuporte(); ligarPrecos();

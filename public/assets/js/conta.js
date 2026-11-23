@@ -32,7 +32,7 @@ async function carregarLista() {
   const j = await api('convites');
   $('quem').textContent = j.cliente?.contato || j.cliente?.email || '';
   const l = $('lista'); l.textContent = '';
-  if (!j.convites.length) l.innerHTML = '<p style="color:var(--tinta-2)">Você ainda não tem convites. <a href="/#modelos">Escolha um modelo</a> para começar.</p>';
+  if (!j.convites.length) l.innerHTML = '<p style="color:var(--tinta-2)">Você ainda não tem convites. <a href="/criar">Escolha um modelo</a> para começar.</p>';
   j.convites.forEach(c => {
     const b = document.createElement('button'); b.className = 'conv';
     b.innerHTML = `<img alt=""><div><h2></h2><div class="meta"></div><div class="num"></div></div>`;
