@@ -32,7 +32,7 @@ document.querySelectorAll('[data-aba]').forEach(b => b.onclick = () => abrirAba(
 function abrirAba(nome) {
   document.querySelectorAll('[data-aba]').forEach(b => b.setAttribute('aria-selected', b.dataset.aba === nome));
   document.querySelectorAll('[data-painel]').forEach(p => p.hidden = p.dataset.painel !== nome);
-  ({ pedidos: carregarPedidos, especiais: carregarEspeciais, modelos: carregarModelos, categorias: carregarCats })[nome]();
+  ({ pedidos: carregarPedidos, especiais: carregarEspeciais, modelos: carregarModelos, categorias: carregarCats, config: carregarConfigAdm })[nome]();
   history.replaceState(null, '', `#${nome}`);
 }
 
@@ -325,6 +325,19 @@ $('edPublicar').onclick = async () => {
     carregarModelos();
   } catch (err) { erroEd(err.message); }
   finally { bt.disabled = false; bt.textContent = 'Publicar modelo'; }
+};
+
+// ---------- configurações ----------
+const formatarZap = d => d ? `(${d.slice(2, 4)}) ${d.slice(4, -4)}-${d.slice(-4)}` : '';
+function mostrarConfig(c) {
+  $('cfgZap').value = formatarZap(c.whatsapp);
+  $('cfgTestar').hidden = !c.whatsapp; $('cfgTestar').href = c.whatsapp ? `https://wa.me/${c.whatsapp}` : '#';
+}
+async function carregarConfigAdm() { mostrarConfig(await api('config')); }
+$('formConfig').onsubmit = async e => {
+  e.preventDefault(); $('erroConfig').hidden = true;
+  try { mostrarConfig(await api('config', { metodo: 'PATCH', corpo: { whatsapp: $('cfgZap').value } })); avisar('Configurações salvas. O site atualiza em até 1 minuto.'); }
+  catch (err) { $('erroConfig').textContent = err.message; $('erroConfig').hidden = false; }
 };
 
 iniciar();

@@ -5,6 +5,8 @@ import { MIGRACOES } from '../../_lib/migracoes.js';
 export async function onRequestPost({ env }) {
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS _migracoes (nome TEXT PRIMARY KEY, aplicado_em TEXT NOT NULL)').run();
   const feitas = new Set((await env.DB.prepare('SELECT nome FROM _migracoes').all()).results.map(r => r.nome));
+  // migrações aplicadas pelo terminal (wrangler d1 migrations apply) ficam em d1_migrations
+  try { (await env.DB.prepare('SELECT name FROM d1_migrations').all()).results.forEach(r => feitas.add(r.name)); } catch {}
   const aplicadas = [];
   for (const m of MIGRACOES) {
     if (feitas.has(m.nome)) continue;

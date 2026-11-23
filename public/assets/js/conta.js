@@ -1,4 +1,5 @@
-import { CONFIG, reais } from './config.js';
+import { CONFIG, reais, ligarSuporte } from './config.js';
+ligarSuporte();
 const $ = id => document.getElementById(id);
 const telas = ['telaEmail', 'telaCodigo', 'telaLista', 'telaConvite'];
 const mostrar = t => { telas.forEach(x => $(x).hidden = x !== t); $('sair').hidden = !['telaLista', 'telaConvite'].includes(t); scrollTo(0, 0); };

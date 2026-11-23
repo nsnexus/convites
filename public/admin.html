@@ -28,6 +28,7 @@
       <button role="tab" data-aba="especiais">Especiais</button>
       <button role="tab" data-aba="modelos">Modelos</button>
       <button role="tab" data-aba="categorias">Categorias</button>
+      <button role="tab" data-aba="config">Configurações</button>
     </nav>
     <button class="sair" id="sair">Sair</button>
   </div></header>
@@ -120,6 +121,16 @@
       <form id="formCat" class="linha-nova"><input id="novaCat" placeholder="Nome da nova categoria, ex.: Batizado" required><button class="bt bt-festa">Adicionar</button></form>
       <p class="nota">Categoria sem nenhum modelo ativo não aparece na vitrine.</p>
       <div id="listaCats" class="lista"></div>
+    </section>
+    <!-- CONFIGURAÇÕES -->
+    <section data-painel="config" hidden>
+      <div class="cab"><h1>Configurações</h1></div>
+      <form id="formConfig" class="cartao-adm" style="max-width:520px">
+        <div class="campo"><label for="cfgZap">WhatsApp de suporte</label><input id="cfgZap" type="tel" inputmode="tel" placeholder="(94) 99111-2222">
+          <span class="ajuda">Aparece no site em "Falar no WhatsApp", "Pedir modelo exclusivo" e na ajuda do pagamento. Deixe vazio para esconder esses botões.</span></div>
+        <p class="erro" id="erroConfig" hidden></p>
+        <div class="linha-bts"><button class="bt bt-festa">Salvar</button><a class="bt bt-linha" id="cfgTestar" target="_blank" rel="noopener" hidden>Testar link</a></div>
+      </form>
     </section>
   </main>
 </div>

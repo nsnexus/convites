@@ -1,7 +1,7 @@
 import { Compositor, carregarModelos, fotoExemplo } from './compositor.js';
-import { zap } from './config.js';
+import { zap, ligarSuporte, carregarConfig, CONFIG } from './config.js';
 
-const dados = await carregarModelos();
+const [dados] = await Promise.all([carregarModelos(), carregarConfig()]);
 const porId = Object.fromEntries(dados.modelos.map(m => [m.id, m]));
 const nomeCat = Object.fromEntries(dados.categorias.map(c => [c.id, c.nome]));
 
@@ -65,7 +65,8 @@ function render() {
     b.onclick = () => abrir(m);
     vitrine.append(b);
   });
-  const ex = document.createElement('a'); ex.className = 'card-modelo card-exclusivo'; ex.href = zap('Olá! Quero um modelo de convite exclusivo.'); ex.target = '_blank'; ex.rel = 'noopener';
+  const ex = document.createElement('a'); ex.className = 'card-modelo card-exclusivo'; ex.dataset.zap = 'Olá! Quero um modelo de convite exclusivo.';
+  if (CONFIG.whatsapp) { ex.href = zap(ex.dataset.zap); ex.target = '_blank'; ex.rel = 'noopener'; } else ex.href = '#';
   ex.innerHTML = `<div class="capa"><p>Não achou o tema? Criamos um só seu.</p></div><h3>Modelo exclusivo</h3><span>Sob orçamento</span>`;
   vitrine.append(ex);
 }
@@ -89,5 +90,4 @@ modal.addEventListener('close', () => { mv.pause(); hero && hv.play().catch(() =
 document.getElementById('fechar').onclick = () => modal.close();
 modal.addEventListener('click', e => { if (e.target.classList.contains('modal-in')) modal.close(); });
 
-document.getElementById('btExclusivo').href = zap('Olá! Quero um modelo de convite exclusivo.');
-document.getElementById('linkZap').href = zap('Olá! Tenho uma dúvida sobre os convites.');
+ligarSuporte();

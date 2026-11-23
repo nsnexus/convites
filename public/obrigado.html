@@ -44,6 +44,7 @@ main{min-height:calc(100svh - 68px);display:grid;place-items:center;padding:32px
       <li>Volte para esta página: ela atualiza sozinha.</li>
     </ol>
     <div class="esperando"><i aria-hidden="true"></i><span id="txEspera">Aguardando o pagamento</span></div>
+    <p style="margin-top:22px;font-size:.92rem"><a data-zap="Olá! Preciso de ajuda com o pagamento do meu convite." hidden>Problema com o pagamento? Fale no WhatsApp</a></p>
   </div>
 
   <div class="caixa" id="pronto" hidden>
@@ -58,11 +59,12 @@ main{min-height:calc(100svh - 68px);display:grid;place-items:center;padding:32px
     <p style="margin-top:26px;font-size:.95rem;color:var(--tinta-2)">Para ver quem confirmou presença, entre em <a href="/conta">Meus convites</a> com o seu e-mail.</p>
   </div>
 
-  <div class="caixa" id="erro" hidden><h1 id="erroTit">Algo deu errado</h1><p class="tx" id="erroTx"></p><a class="bt bt-linha" href="/conta">Ir para Meus convites</a></div>
+  <div class="caixa" id="erro" hidden><h1 id="erroTit">Algo deu errado</h1><p class="tx" id="erroTx"></p><div class="bts"><a class="bt bt-linha" href="/conta">Ir para Meus convites</a><a class="bt bt-festa" data-zap="Olá! Preciso de ajuda com o pagamento do meu convite." hidden>Falar no WhatsApp</a></div></div>
 </main>
 <script src="/assets/vendor/qrcode.js"></script>
 <script type="module">
-import { reais } from '/assets/js/config.js';
+import { reais, ligarSuporte } from '/assets/js/config.js';
+ligarSuporte();
 const $ = id => document.getElementById(id);
 const id = new URLSearchParams(location.search).get('pedido') || '';
 const mostrar = t => ['carregando', 'pagar', 'pronto', 'erro'].forEach(x => $(x).hidden = x !== t);

@@ -1,6 +1,6 @@
 import { carregarModelos } from './compositor.js';
 import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes } from './estilos.js';
-import { CONFIG, reais } from './config.js';
+import { CONFIG, reais, ligarSuporte } from './config.js';
 
 const $ = id => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
@@ -9,7 +9,7 @@ const slugEditar = qs.get('editar');
 const tokenEspecial = qs.get('pedido');
 let especial = null, existente = null;
 
-function erroFatal(t) { document.querySelector('main').innerHTML = `<div style="text-align:center;padding:90px 0"><h1 style="font-size:2.2rem"></h1><p style="color:var(--tinta-2);margin-top:12px">Fale com a gente pelo WhatsApp se precisar de ajuda.</p></div>`; document.querySelector('main h1').textContent = t; throw 0; }
+function erroFatal(t) { document.querySelector('main').innerHTML = `<div style="text-align:center;padding:90px 0"><h1 style="font-size:2.2rem"></h1><p style="color:var(--tinta-2);margin-top:12px"><a data-zap="Olá! Preciso de ajuda com meu convite." hidden>Fale com a gente pelo WhatsApp</a></p></div>`; document.querySelector('main h1').textContent = t; ligarSuporte(); throw 0; }
 
 // ---------- carregar pedido especial ou convite existente ----------
 if (tokenEspecial) {
