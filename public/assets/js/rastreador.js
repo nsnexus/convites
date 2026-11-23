@@ -108,8 +108,24 @@ export class Rastreador {
   }
 }
 
+// Tira o tremor da detecção sem atrasar o movimento real da câmera:
+// 1) salto isolado (> 8 px da mediana de 7 quadros) vira a mediana; 2) trecho final parado vira um só retângulo;
+// 3) o resto passa por Savitzky-Golay (janela 9, grau 2), que mantém a aceleração do zoom.
 function suavizar(r) {
-  if (r.length < 5) return r.map(q => q.map(n => +n.toFixed(4)));
-  const med = r.map((_, i) => [0, 1, 2, 3].map(k => { const v = r.slice(Math.max(0, i - 2), i + 3).map(q => q[k]).sort((a, b) => a - b); return v.length % 2 ? v[v.length >> 1] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2; }));
-  return med.map((_, i) => [0, 1, 2, 3].map(k => { const v = med.slice(Math.max(0, i - 1), i + 2); return +(v.reduce((s, q) => s + q[k], 0) / v.length).toFixed(4); }));
+  const n = r.length, PX = [1080, 1920, 1080, 1920];
+  if (n < 6) return r.map(q => q.map(v => +v.toFixed(5)));
+  const mediana = (arr) => { const s = [...arr].sort((a, b) => a - b); return s.length % 2 ? s[s.length >> 1] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2; };
+  const lim = (i) => Math.min(n - 1, Math.max(0, i));
+  let a = r.map((q, i) => {
+    const med = [0, 1, 2, 3].map(k => mediana([-3, -2, -1, 0, 1, 2, 3].map(d => r[lim(i + d)][k])));
+    return q.some((v, k) => Math.abs(v - med[k]) * PX[k] > 8) ? med : q.slice();
+  });
+  const fim = [0, 1, 2, 3].map(k => mediana(a.slice(-6).map(q => q[k])));
+  let h = n;
+  while (h > 0 && a[h - 1].every((v, k) => Math.abs(v - fim[k]) * PX[k] < 3)) h--;
+  if (h < n) { const parado = [0, 1, 2, 3].map(k => mediana(a.slice(h).map(q => q[k]))); for (let i = h; i < n; i++) a[i] = parado.slice(); }
+  const C = [-21, 14, 39, 54, 59, 54, 39, 14, -21], S = 231;
+  const g = a.map((q, i) => i >= h ? q : [0, 1, 2, 3].map(k => C.reduce((s, c, j) => s + c * a[lim(i + j - 4)][k], 0) / S));
+  for (let k = 1; k < 5 && h < n; k++) { const i = h - k; if (i >= 0) { const t = k / 5; g[i] = g[i].map((v, j) => v * t + a[h][j] * (1 - t)); } }
+  return g.map(q => q.map(v => +v.toFixed(5)));
 }

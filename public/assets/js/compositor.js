@@ -54,6 +54,13 @@ export class Compositor {
     if (modelo.mascara) this._img(modelo.mascara).then(im => this._tex(2, im));
     this.c.width = 720; this.c.height = 1280;
     this._loop = this._loop.bind(this); requestAnimationFrame(this._loop);
+    // Quando o navegador permite, desenha exatamente no quadro que o vídeo está mostrando
+    // (sem isso a foto pode usar a posição de um quadro e o vídeo mostrar o próximo: parece tremer).
+    if ('requestVideoFrameCallback' in HTMLVideoElement.prototype) {
+      const aoQuadro = (_agora, meta) => { if (this.parado) return; this.tempoQuadro = meta.mediaTime; this.desenhar(true); this.v.requestVideoFrameCallback(aoQuadro); };
+      this.v.requestVideoFrameCallback(aoQuadro);
+      this.v.addEventListener('emptied', () => { this.tempoQuadro = undefined; });
+    }
   }
   _img(src) { return new Promise((ok, er) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = er; i.src = src; }); }
   _tex(i, src) { const gl = this.gl; gl.activeTexture(gl.TEXTURE0+i); gl.bindTexture(gl.TEXTURE_2D, this.tx[i]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); }
@@ -72,12 +79,16 @@ export class Compositor {
   }
   definirAjuste(a) { Object.assign(this.ajuste, a); this.desenhar(); }
   _quadro() {
-    const m = this.m, f = Math.floor(this.v.currentTime * m.fps) - m.inicio;
-    if (f < 0) return null;
+    const m = this.m;
+    // com o tempo exato do quadro exibido usa arredondamento; sem ele, o relógio do vídeo
+    const t = this.tempoQuadro !== undefined && Math.abs(this.tempoQuadro - this.v.currentTime) < .25 ? this.tempoQuadro : this.v.currentTime;
+    const f = (this.tempoQuadro !== undefined ? Math.round(t * m.fps) : Math.floor(t * m.fps + 1e-3)) - m.inicio;
+    if (f < 0 || !m.quadros.length) return null;
     return { r: m.quadros[Math.min(f, m.quadros.length - 1)], f };
   }
   desenhar() {
     const gl = this.gl, v = this.v;
+    if (v.paused && this.tempoQuadro !== undefined && Math.abs(this.tempoQuadro - v.currentTime) > .02) this.tempoQuadro = undefined;
     if (v.readyState >= 2) { this._tex(0, v); }
     gl.viewport(0, 0, this.c.width, this.c.height);
     const q = this._quadro();
@@ -100,7 +111,13 @@ export class Compositor {
     }
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
-  _loop() { if (!this.parado) { if (!this.v.paused || this._sujo !== this.v.currentTime) { this._sujo = this.v.currentTime; this.desenhar(); } requestAnimationFrame(this._loop); } }
+  _loop() {
+    if (this.parado) return;
+    // com requestVideoFrameCallback, o loop só cuida de vídeo pausado (ajustes, troca de foto)
+    const porQuadro = this.tempoQuadro !== undefined && !this.v.paused;
+    if (!porQuadro && (!this.v.paused || this._sujo !== this.v.currentTime)) { this._sujo = this.v.currentTime; this.desenhar(); }
+    requestAnimationFrame(this._loop);
+  }
   parar() { this.parado = true; }
 }
 
