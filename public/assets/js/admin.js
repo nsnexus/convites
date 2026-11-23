@@ -38,6 +38,8 @@ function abrirAba(nome) {
 
 let categorias = [], modelos = [];
 async function iniciar() {
+  // garante as tabelas do banco (na primeira vez cria tudo; depois só aplica o que for novo)
+  try { const r = await api('instalar', { metodo: 'POST' }); if (r.aplicadas?.length) avisar('Banco de dados preparado.'); } catch { return; }
   try { categorias = await api('categorias'); } catch { return; }
   $('telaLogin').hidden = true; $('telaAdmin').hidden = false;
   modelos = await api('modelos');
