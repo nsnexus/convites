@@ -111,6 +111,28 @@ export class Rastreador {
 // Tira o tremor da detecção sem atrasar o movimento real da câmera:
 // 1) salto isolado (> 8 px da mediana de 7 quadros) vira a mediana; 2) trecho final parado vira um só retângulo;
 // 3) o resto passa por Savitzky-Golay (janela 9, grau 2), que mantém a aceleração do zoom.
+// Selo do casamento: acha o selo claro no primeiro quadro e segue para frente até ele quebrar/sumir.
+Rastreador.prototype.rodarSelo = async function ({ limiar = 190, sat = 45, fechar = true, semente = [.5, .5], progresso = () => {} } = {}) {
+  const o = { limiar, sat, fechar }, tot = this.total;
+  const b = detectar(await this.quadro(0), o, [semente[0] * W, semente[1] * H]);
+  if (!b) throw new Error('Não achei o selo no começo do vídeo.');
+  const bw = b[2] - b[0], bh = b[3] - b[1];
+  if (bw * bh < N * .003 || bw * bh > N * .45) throw new Error('A área encontrada não parece um selo.');
+  const asp = bw / bh, tr = [b]; let ant = b;
+  for (let i = 1; i < tot; i++) {
+    progresso(i / tot);
+    const bb = detectar(await this.quadro(i), o, [(ant[0] + ant[2]) / 2, (ant[1] + ant[3]) / 2]);
+    if (!bb) break;
+    const a2 = (bb[2] - bb[0]) * (bb[3] - bb[1]), asp2 = (bb[2] - bb[0]) / Math.max(1, bb[3] - bb[1]), pa = (ant[2] - ant[0]) * (ant[3] - ant[1]);
+    if (Math.abs(asp2 / asp - 1) > .2 || a2 > pa * 1.6 || a2 < pa * .6) break;
+    tr.push(bb); ant = bb;
+  }
+  progresso(1);
+  if (tr.length < 6) throw new Error('O selo some rápido demais. Marque o selo na mão.');
+  const r = tr.map(q => [q[0] / W, q[1] / H, (q[2] - q[0]) / W, (q[3] - q[1]) / H]);
+  return { inicio: 0, quadros: suavizar(r), total: tot };
+};
+
 function suavizar(r) {
   const n = r.length, PX = [1080, 1920, 1080, 1920];
   if (n < 6) return r.map(q => q.map(v => +v.toFixed(5)));

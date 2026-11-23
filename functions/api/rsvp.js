@@ -19,8 +19,9 @@ export async function onRequestPost({ request, env }) {
     const limite = r.limite || 10;
     if (adultos + criancas > limite) return json({ erro: `Cada confirmação pode ter no máximo ${limite} ${limite > 1 ? 'pessoas' : 'pessoa'}.` }, 400);
   }
-  await rodar(env, 'INSERT INTO confirmacoes (id, convite_id, nome, vai, pessoas, adultos, criancas, presente, recado) VALUES (?,?,?,?,?,?,?,?,?)',
+  await rodar(env, 'INSERT INTO confirmacoes (id, convite_id, nome, vai, pessoas, adultos, criancas, presente, recado, restricoes) VALUES (?,?,?,?,?,?,?,?,?,?)',
     uuid(), c.id, nome, b.vai ? 1 : 0, adultos + criancas, adultos, criancas,
-    b.vai && b.presente ? String(b.presente).slice(0, 120) : null, b.recado ? String(b.recado).slice(0, 300) : null);
+    b.vai && b.presente ? String(b.presente).slice(0, 120) : null, b.recado ? String(b.recado).slice(0, 300) : null,
+    b.vai && b.restricoes ? String(b.restricoes).slice(0, 200) : null);
   return json({ ok: true });
 }

@@ -18,10 +18,10 @@ export function atualizar(env, tabela, campos, onde, ...p) {
 }
 export const bool = (v) => (v ? 1 : 0);
 
-export const CAMPOS_MODELO = 'id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, mascara_url, chave, quadros';
+export const CAMPOS_MODELO = 'id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, mascara_url, chave, quadros, tipo';
 // Formato que o site usa para um modelo
 export const modeloPublico = (m) => ({
   id: m.id, nome: m.nome, categoria: m.categoria_id, video: m.video_url, poster: m.poster_url, fps: m.fps,
-  inicio: m.inicio, forma: m.forma, mascara: m.mascara_url, chave: !!m.chave, quadros: JSON.parse(m.quadros),
+  inicio: m.inicio, forma: m.forma, mascara: m.mascara_url, chave: !!m.chave, quadros: JSON.parse(m.quadros), tipo: m.tipo || 'foto',
 });
 export const origem = (request, env) => env.SITE_URL || new URL(request.url).origin;

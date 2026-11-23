@@ -18,6 +18,11 @@ export async function onRequestPatch({ request, env }) {
     if (c === null || c < 100 || c > 100000) return json({ erro: 'Preço do convite inválido (entre R$ 1,00 e R$ 1.000,00).' }, 400);
     await salvar(env, 'preco_convite', c);
   }
+  if (b.preco_casamento !== undefined) {
+    const c = centavos(b.preco_casamento);
+    if (c === null || c < 100 || c > 100000) return json({ erro: 'Preço do casamento inválido (entre R$ 1,00 e R$ 1.000,00).' }, 400);
+    await salvar(env, 'preco_casamento', c);
+  }
   if (b.preco_musica !== undefined) {
     const c = centavos(b.preco_musica);
     if (c === null || c < 0 || c > 100000) return json({ erro: 'Preço da música inválido (entre R$ 0,00 e R$ 1.000,00).' }, 400);

@@ -82,7 +82,7 @@ async function abrir(slug) {
     const ad = x.adultos || (x.vai ? x.pessoas : 0), cr = x.criancas || 0;
     d.querySelector('.s').textContent = x.vai ? `Vai · ${ad} ${ad > 1 ? 'adultos' : 'adulto'}${cr ? ` e ${cr} ${cr > 1 ? 'crianças' : 'criança'}` : ''}` : 'Não vai';
     d.querySelector('strong').textContent = x.nome;
-    d.querySelector('p').textContent = [x.presente && `Presente: ${x.presente}`, x.recado].filter(Boolean).join(' — ');
+    d.querySelector('p').textContent = [x.presente && `Presente: ${x.presente}`, x.restricoes && `Restrição: ${x.restricoes}`, x.recado].filter(Boolean).join(' — ');
     r.append(d);
   });
   mostrar('telaConvite');
@@ -90,8 +90,8 @@ async function abrir(slug) {
 $('voltar').onclick = carregarLista;
 $('cPlanilha').onclick = () => {
   const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const linhas = [['Nome', 'Vai', 'Adultos', 'Crianças', 'Presente', 'Recado', 'Respondeu em'].map(esc).join(';')];
-  lista.forEach(x => linhas.push([x.nome, x.vai ? 'Sim' : 'Não', x.vai ? (x.adultos || x.pessoas) : 0, x.criancas || 0, x.presente || '', x.recado || '', new Date(x.criado_em).toLocaleString('pt-BR')].map(esc).join(';')));
+  const linhas = [['Nome', 'Vai', 'Adultos', 'Crianças', 'Presente', 'Restrição alimentar', 'Recado', 'Respondeu em'].map(esc).join(';')];
+  lista.forEach(x => linhas.push([x.nome, x.vai ? 'Sim' : 'Não', x.vai ? (x.adultos || x.pessoas) : 0, x.criancas || 0, x.presente || '', x.restricoes || '', x.recado || '', new Date(x.criado_em).toLocaleString('pt-BR')].map(esc).join(';')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
   a.download = `convidados-${atual.slug}.csv`; a.click();

@@ -21,6 +21,11 @@ export const ESTILOS = [
   { id: 'oliva',     nome: 'Oliva',         grupo: 'min', cores: { fundo: '#f4f1e8', texto: '#3a3a2a', destaque: '#6b6b3a' }, titulo: 'playfair',  corpo: 'Karla' },
   { id: 'lavanda',   nome: 'Lavanda',       grupo: 'min', cores: { fundo: '#f3f0f8', texto: '#352f45', destaque: '#8a78c2' }, titulo: 'fredoka',   corpo: 'Nunito' },
   { id: 'noite',     nome: 'Noite',         grupo: 'min', cores: { fundo: '#14182b', texto: '#e9ecf5', destaque: '#c9b37e' }, titulo: 'cormorant', corpo: 'Manrope' },
+  // Casamento (página com rolagem animada)
+  { id: 'cas-bordo',   nome: 'Bordô',  grupo: 'casamento', cores: { fundo: '#f5ebe6', texto: '#4a1c22', destaque: '#7a1f2b' }, titulo: 'greatvibes', corpo: 'Cormorant Garamond' },
+  { id: 'cas-salvia',  nome: 'Sálvia', grupo: 'casamento', cores: { fundo: '#edf1e8', texto: '#36443a', destaque: '#7d9471' }, titulo: 'pinyon',     corpo: 'Cormorant Garamond' },
+  { id: 'cas-rose',    nome: 'Rosé',   grupo: 'casamento', cores: { fundo: '#f6e9ee', texto: '#5a3b4a', destaque: '#b0718c' }, titulo: 'pinyon',     corpo: 'Cormorant Garamond' },
+  { id: 'cas-marfim',  nome: 'Marfim', grupo: 'casamento', cores: { fundo: '#f8f4ec', texto: '#2f2a24', destaque: '#a6874f' }, titulo: 'italiana',   corpo: 'Cormorant Garamond' },
 ];
 
 // Fontes de título que o cliente pode escolher
@@ -35,12 +40,16 @@ export const FONTES = {
   bebas:     { nome: 'Impacto', css: "'Bebas Neue', sans-serif", google: 'Bebas+Neue' },
   bangers:   { nome: 'Gibi', css: "'Bangers', cursive", google: 'Bangers' },
   amatic:    { nome: 'Artesanal', css: "'Amatic SC', cursive", google: 'Amatic+SC:wght@700' },
+  greatvibes:{ nome: 'Caligrafia', css: "'Great Vibes', cursive", google: 'Great+Vibes' },
+  pinyon:    { nome: 'Caligrafia fina', css: "'Pinyon Script', cursive", google: 'Pinyon+Script' },
+  italiana:  { nome: 'Italiana', css: "'Italiana', serif", google: 'Italiana' },
 };
 const CORPO_GOOGLE = { Lato: 'Lato:wght@400;700', Nunito: 'Nunito:wght@400;700', Karla: 'Karla:wght@400;700', Manrope: 'Manrope:wght@400;700',
-  Barlow: 'Barlow:wght@400;600', 'Comic Neue': 'Comic+Neue:wght@400;700', Quicksand: 'Quicksand:wght@400;600', 'Josefin Sans': 'Josefin+Sans:wght@400;600' };
+  Barlow: 'Barlow:wght@400;600', 'Cormorant Garamond': 'Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600', 'Comic Neue': 'Comic+Neue:wght@400;700', Quicksand: 'Quicksand:wght@400;600', 'Josefin Sans': 'Josefin+Sans:wght@400;600' };
 
 // Estilo sugerido para cada categoria da vitrine
-export const ESTILO_DA_CATEGORIA = { '15-anos': 'princesa', futebol: 'esportivo', herois: 'hq', aventura: 'jardim' };
+export const ESTILO_DA_CATEGORIA = { '15-anos': 'princesa', futebol: 'esportivo', herois: 'hq', aventura: 'jardim', casamento: 'cas-bordo' };
+export const ehCasamento = (modelo) => modelo?.tipo === 'selo' || modelo?.categoria === 'casamento';
 
 export const estiloPorId = id => ESTILOS.find(e => e.id === id) || ESTILOS[0];
 
@@ -91,12 +100,16 @@ export function carregarFontes(lista) {
 export function personalizacaoPadrao(categoria) {
   return {
     estilo: ESTILO_DA_CATEGORIA[categoria] || 'classico', cores: { destaque: '', fundo: '' }, fonte: '',
+    casal: { nome1: '', nome2: '', iniciais: '' }, encerramento: '',
     blocos: {
       contagem: true, mapa: true,
+      convite: { texto: '', versiculo: '' },
+      recepcao: { ativo: false, local: '', endereco: '', hora: '' },
+      historia: { ativo: false, texto: '' },
       programacao: { ativo: false, itens: [{ hora: '', texto: '' }] },
-      traje: { ativo: false, texto: '', cores: [] },
-      presentes: { ativo: false, itens: [], pix: '', tamanhos: '' },
-      rsvp: { ativo: true, criancas: true, limite: 6, prazo: '' },
+      traje: { ativo: false, texto: '', cores: [], evitar: [] },
+      presentes: { ativo: false, itens: [], pix: '', tamanhos: '', banco: '', link: '', texto: '' },
+      rsvp: { ativo: true, criancas: true, limite: 6, prazo: '', restricoes: false },
       observacoes: { ativo: false, texto: '' },
     },
   };

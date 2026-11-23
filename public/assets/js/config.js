@@ -3,6 +3,7 @@ export const CONFIG = {
   whatsapp: '',                       // vem do admin (Configurações); preenchido por carregarConfig()
   precoConvite: 3990,                 // em centavos
   precoMusica: 1000,
+  precoCasamento: 5990,
   // Checkout externo (opcional). Vazio = Pix pelo NSNexus Pay na página /obrigado.
   checkoutUrl: '',
 };
@@ -16,6 +17,7 @@ export function carregarConfig() {
     if (c.whatsapp) CONFIG.whatsapp = c.whatsapp;
     if (c.precoConvite) CONFIG.precoConvite = c.precoConvite;
     if (c.precoMusica != null) CONFIG.precoMusica = c.precoMusica;
+    if (c.precoCasamento) CONFIG.precoCasamento = c.precoCasamento;
     return CONFIG;
   });
   return carregando;
@@ -34,6 +36,6 @@ export async function ligarSuporte(raiz = document) {
 export async function ligarPrecos(raiz = document) {
   await carregarConfig();
   raiz.querySelectorAll('[data-preco]').forEach(e => {
-    e.textContent = e.dataset.preco === 'musica' ? `+ ${reais(CONFIG.precoMusica)}` : reais(CONFIG.precoConvite);
+    e.textContent = e.dataset.preco === 'musica' ? `+ ${reais(CONFIG.precoMusica)}` : e.dataset.preco === 'casamento' ? reais(CONFIG.precoCasamento) : reais(CONFIG.precoConvite);
   });
 }

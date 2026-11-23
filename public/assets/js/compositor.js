@@ -14,7 +14,7 @@ varying vec2 uv;
 uniform sampler2D vid, foto, masc;
 uniform vec4 ret;        // x,y,w,h normalizados
 uniform vec4 fotoUV;     // escala.x, escala.y, desloc.x, desloc.y
-uniform float alfa, forma, usaChave, temFoto;
+uniform float alfa, forma, usaChave, temFoto, modoSelo;
 void main(){
   vec4 c = texture2D(vid, uv);
   vec2 l = (uv - ret.xy) / ret.zw;
@@ -28,6 +28,15 @@ void main(){
     k = clamp((mn - .43) / .2, 0., 1.) * clamp((.29 - (mx - mn)) / .14, 0., 1.);
   }
   vec4 f = texture2D(foto, l * fotoUV.xy + fotoUV.zw);
+  if (modoSelo > .5) {
+    // iniciais gravadas na cera: escurece onde há letra e clareia a borda de cima (baixo-relevo)
+    vec2 uvf = l * fotoUV.xy + fotoUV.zw;
+    float a = f.a * m * alfa;
+    float luz = texture2D(foto, uvf + vec2(.006, .006)).a * m * alfa;
+    vec3 cor = c.rgb * (1. - .38 * a) + vec3(1.) * max(0., luz - a) * .22;
+    gl_FragColor = vec4(cor, c.a);
+    return;
+  }
   gl_FragColor = mix(c, f, m * k * alfa);
 }`;
 
@@ -44,7 +53,7 @@ export class Compositor {
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
     const a = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(a); gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
-    this.u = {}; ['vid','foto','masc','ret','fotoUV','alfa','forma','usaChave','temFoto'].forEach(n => this.u[n] = gl.getUniformLocation(pr, n));
+    this.u = {}; ['vid','foto','masc','ret','fotoUV','alfa','forma','usaChave','temFoto','modoSelo'].forEach(n => this.u[n] = gl.getUniformLocation(pr, n));
     this.tx = [0,1,2].map(i => { const t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0+i); gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -77,6 +86,19 @@ export class Compositor {
     if (m.mascara) this._img(m.mascara).then(im => this._tex(2, im));
     this.v.src = m.video; this.v.load();
   }
+  // Iniciais do casal para o selo (tipo 'selo'): textura transparente com as letras
+  async definirIniciais(texto) {
+    try { await document.fonts.load("600 200px 'Cormorant Garamond'"); } catch {}
+    const cv = document.createElement('canvas'); cv.width = cv.height = 512;
+    const g = cv.getContext('2d'); g.fillStyle = '#000'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const t = (texto || '').trim() || '♥';
+    let tam = 230; g.font = `italic 600 ${tam}px 'Cormorant Garamond', Georgia, serif`;
+    while (g.measureText(t).width > 330 && tam > 60) { tam -= 10; g.font = `italic 600 ${tam}px 'Cormorant Garamond', Georgia, serif`; }
+    g.fillText(t, 256, 270);
+    // anel fino gravado em volta
+    g.lineWidth = 7; g.beginPath(); g.arc(256, 256, 214, 0, Math.PI * 2); g.stroke();
+    this.foto = cv; this._tex(1, cv); this.temFoto = true; this.desenhar();
+  }
   definirAjuste(a) { Object.assign(this.ajuste, a); this.desenhar(); }
   _quadro() {
     const m = this.m;
@@ -84,6 +106,7 @@ export class Compositor {
     const t = this.tempoQuadro !== undefined && Math.abs(this.tempoQuadro - this.v.currentTime) < .25 ? this.tempoQuadro : this.v.currentTime;
     const f = (this.tempoQuadro !== undefined ? Math.round(t * m.fps) : Math.floor(t * m.fps + 1e-3)) - m.inicio;
     if (f < 0 || !m.quadros.length) return null;
+    if (m.tipo === 'selo' && f >= m.quadros.length) return null;
     return { r: m.quadros[Math.min(f, m.quadros.length - 1)], f };
   }
   desenhar() {
@@ -93,15 +116,20 @@ export class Compositor {
     gl.viewport(0, 0, this.c.width, this.c.height);
     const q = this._quadro();
     let alfa = 0, ret = [0,0,0,0];
+    const selo = this.m.tipo === 'selo';
     if (q) {
       const [x,y,w,h] = q.r, ix = w*.015, iy = h*.015;
-      ret = [x+ix, y+iy, w-2*ix, h-2*iy]; alfa = Math.min(1, (q.f+1)/10);
+      ret = [x+ix, y+iy, w-2*ix, h-2*iy];
+      // foto entra com fade; iniciais do selo já começam visíveis e somem no fim do rastreio
+      alfa = selo ? Math.min(1, (this.m.quadros.length - q.f) / 6) : Math.min(1, (q.f+1)/10);
     }
+    gl.uniform1f(this.u.modoSelo, selo ? 1 : 0);
     gl.uniform4fv(this.u.ret, ret); gl.uniform1f(this.u.alfa, alfa);
-    gl.uniform1f(this.u.forma, { retangulo: 0, circulo: 1, mascara: 2 }[this.m.forma] || 0);
+    gl.uniform1f(this.u.forma, selo ? 1 : ({ retangulo: 0, circulo: 1, mascara: 2 }[this.m.forma] || 0));
     gl.uniform1f(this.u.usaChave, this.m.chave ? 1 : 0);
     gl.uniform1f(this.u.temFoto, this.temFoto ? 1 : 0);
-    if (this.foto && q) {
+    if (selo && q) gl.uniform4fv(this.u.fotoUV, [1, 1, 0, 0]);
+    else if (this.foto && q) {
       // "cover": preenche a moldura mantendo a proporção da foto
       const ra = (ret[2]*720) / (ret[3]*1280), fa = this.foto.width / this.foto.height, z = this.ajuste.zoom;
       let sx = 1, sy = 1; if (fa > ra) sx = ra / fa; else sy = fa / ra;

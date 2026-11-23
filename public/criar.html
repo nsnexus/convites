@@ -71,6 +71,7 @@ input[type=range]{accent-color:var(--festa)}
 .especial{background:var(--tinta);color:#fff;border-radius:20px;padding:18px 20px;margin:18px 0 0}
 .especial p{color:#CDBFD6;margin-top:4px;white-space:pre-line}
 .ver-fone{display:none}
+body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:none!important}
 @media (max-width:900px){
   .criar{grid-template-columns:1fr;gap:0}
   .lado{position:fixed;inset:0;z-index:40;background:rgba(26,13,32,.9);display:none;place-items:center;padding:20px}
@@ -103,8 +104,9 @@ input[type=range]{accent-color:var(--festa)}
 
     <section class="etapa">
       <h2><span>1</span>Abertura e foto</h2>
-      <p class="dica">O vídeo abre o convite e termina com a foto na moldura.</p>
+      <p class="dica so-festa">O vídeo abre o convite e termina com a foto na moldura.</p>
       <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo"><label for="modelo">Vídeo de abertura</label><select id="modelo"></select></div></div>
+      <div class="so-festa">
       <label class="bt bt-linha" id="btFoto" style="width:max-content;cursor:pointer">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
       <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado.</p>
       <div class="ajustes" id="ajustes" hidden>
@@ -112,22 +114,33 @@ input[type=range]{accent-color:var(--festa)}
         <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
         <label>Vertical<input type="range" id="py" min="0" max="1" step=".01" value=".5"></label>
       </div>
+      </div>
+      <p class="dica so-casamento" style="margin-top:10px">O convite abre no envelope e as iniciais do casal aparecem no selo.</p>
     </section>
 
     <section class="etapa">
-      <h2><span>2</span>A festa</h2>
-      <div class="duas">
+      <h2><span>2</span><b id="tit2">A festa</b></h2>
+      <div class="so-casamento">
+        <div class="duas">
+          <div class="campo"><label for="nome1">Nome de um</label><input id="nome1" maxlength="40" placeholder="Ex.: Laura" autocomplete="off"></div>
+          <div class="campo"><label for="nome2">Nome do outro</label><input id="nome2" maxlength="40" placeholder="Ex.: Rafael" autocomplete="off"></div>
+        </div>
+        <div class="campo"><label for="iniciais">Iniciais no selo</label><input id="iniciais" maxlength="7" placeholder="L&R"><span class="ajuda">Preenchemos sozinhos com as iniciais dos nomes. Pode mudar.</span></div>
+      </div>
+      <div class="duas so-festa">
         <div class="campo"><label for="homenageado">Nome de quem faz a festa</label><input id="homenageado" name="homenageado" required autocomplete="off"></div>
         <div class="campo"><label for="idade">Idade que vai completar</label><input id="idade" name="idade" inputmode="numeric" maxlength="3"></div>
       </div>
-      <div class="campo"><label for="tituloConvite">Título do convite</label><input id="tituloConvite" name="titulo" placeholder="Ex.: Os 15 anos da Laura"><span class="ajuda">Se deixar em branco, usamos o nome e a idade.</span></div>
+      <div class="campo so-festa"><label for="tituloConvite">Título do convite</label><input id="tituloConvite" name="titulo" placeholder="Ex.: Os 15 anos da Laura"><span class="ajuda">Se deixar em branco, usamos o nome e a idade.</span></div>
       <div class="duas">
         <div class="campo"><label for="data">Data</label><input type="date" id="data" name="data" required></div>
-        <div class="campo"><label for="hora">Horário</label><input type="time" id="hora" name="hora" required></div>
+        <div class="campo"><label for="hora" id="rotHora">Horário</label><input type="time" id="hora" name="hora" required></div>
       </div>
-      <div class="campo"><label for="local">Nome do local</label><input id="local" name="local" placeholder="Ex.: Espaço Jardim das Flores" required></div>
-      <div class="campo"><label for="endereco">Endereço</label><input id="endereco" name="endereco" placeholder="Rua, número, bairro, cidade" required></div>
-      <div class="campo"><label for="recado">Mensagem de abertura</label><textarea id="recado" name="recado" maxlength="400" placeholder="Ex.: Venha celebrar comigo esse dia tão especial!"></textarea></div>
+      <div class="campo"><label for="local" id="rotLocal">Nome do local</label><input id="local" name="local" placeholder="Ex.: Espaço Jardim das Flores" required></div>
+      <div class="campo"><label for="endereco" id="rotEndereco">Endereço</label><input id="endereco" name="endereco" placeholder="Rua, número, bairro, cidade" required></div>
+      <div class="campo"><label for="recado" id="rotRecado">Mensagem de abertura</label><textarea id="recado" name="recado" maxlength="400" placeholder="Ex.: Venha celebrar comigo esse dia tão especial!"></textarea></div>
+      <div class="campo so-casamento"><label for="versiculo">Versículo ou frase (opcional)</label><input id="versiculo" maxlength="300" placeholder="Ex.: O amor é paciente, o amor é bondoso. 1 Coríntios 13:4"></div>
+      <div class="campo so-casamento"><label for="encerramento">Frase do final (opcional)</label><input id="encerramento" maxlength="200" placeholder="Ex.: Esperamos você para celebrar conosco"></div>
     </section>
 
     <section class="etapa">
@@ -147,17 +160,28 @@ input[type=range]{accent-color:var(--festa)}
       <div class="blocos">
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="contagem"><div><strong>Contagem regressiva</strong><span>Dias, horas e minutos até a festa.</span></div></label></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="mapa"><div><strong>Botão "Como chegar"</strong><span>Abre o endereço no mapa do celular.</span></div></label></div>
+        <div class="bloco-op so-casamento"><label><input type="checkbox" class="liga" data-bloco="recepcao.ativo"><div><strong>Recepção em outro local</strong><span>Quando a festa não é no mesmo lugar da cerimônia.</span></div></label>
+          <div class="campos"><div class="campo"><label for="recLocal">Local da recepção</label><input id="recLocal" maxlength="120"></div>
+            <div class="campo"><label for="recEnd">Endereço da recepção</label><input id="recEnd" maxlength="200"></div>
+            <div class="campo"><label for="recHora">Horário da recepção</label><input id="recHora" type="time"></div></div></div>
+        <div class="bloco-op so-casamento"><label><input type="checkbox" class="liga" data-bloco="historia.ativo"><div><strong>Nossa história</strong><span>Como vocês se conheceram, o pedido...</span></div></label>
+          <div class="campos"><textarea id="histTexto" maxlength="1200" placeholder="Conte em poucas linhas a história de vocês."></textarea></div></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="programacao.ativo"><div><strong>Programação</strong><span>Os horários da festa.</span></div></label>
           <div class="campos"><div id="progItens" style="display:grid;gap:8px"></div><button type="button" class="mini-bt" id="addProg" style="justify-self:start">+ Adicionar horário</button></div></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="traje.ativo"><div><strong>Sugestão de traje</strong><span>Como ir vestido e cores sugeridas.</span></div></label>
           <div class="campos"><textarea id="trajeTexto" maxlength="300" placeholder="Ex.: Esporte fino. Evite branco."></textarea>
-            <div class="cores-traje" id="trajeCores"></div></div></div>
+            <div class="cores-traje" id="trajeCores"></div>
+            <div class="so-casamento"><p class="ajuda" style="margin:6px 0">Cores para evitar</p><div class="cores-traje" id="trajeEvitar"></div></div></div></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="presentes.ativo"><div><strong>Sugestões de presente</strong><span>Lista, chave Pix e tamanhos.</span></div></label>
           <div class="campos"><div class="campo"><label for="presItens">Presentes (um por linha)</label><textarea id="presItens" placeholder="Ex.: Bicicleta&#10;Kit de pintura"></textarea><span class="ajuda">O convidado pode marcar qual vai levar, para não repetir.</span></div>
             <div class="campo"><label for="presPix">Chave Pix (opcional)</label><input id="presPix" maxlength="120"></div>
-            <div class="campo"><label for="presTam">Tamanhos (opcional)</label><input id="presTam" maxlength="200" placeholder="Ex.: Roupa 6 anos, calçado 30"></div></div></div>
+            <div class="campo so-casamento"><label for="presTexto">Mensagem (opcional)</label><input id="presTexto" maxlength="300" placeholder="Se quiser nos presentear, deixamos algumas sugestões com carinho."></div>
+            <div class="campo so-casamento"><label for="presLink">Link da lista de presentes (opcional)</label><input id="presLink" type="url" placeholder="https://..."></div>
+            <div class="campo so-casamento"><label for="presBanco">Dados bancários (opcional)</label><textarea id="presBanco" maxlength="300" placeholder="Banco, agência, conta, nome"></textarea></div>
+            <div class="campo so-festa"><label for="presTam">Tamanhos (opcional)</label><input id="presTam" maxlength="200" placeholder="Ex.: Roupa 6 anos, calçado 30"></div></div></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="rsvp.ativo"><div><strong>Confirmação de presença</strong><span>Lista de quem vai, com adultos e crianças.</span></div></label>
           <div class="campos"><label class="check"><input type="checkbox" id="rsvpCriancas"> Perguntar quantas crianças</label>
+            <label class="check so-casamento"><input type="checkbox" id="rsvpRestr"> Perguntar restrição alimentar</label>
             <div class="duas"><div class="campo"><label for="rsvpLimite">Máximo de pessoas por resposta</label><input type="number" id="rsvpLimite" min="1" max="30"></div>
             <div class="campo"><label for="rsvpPrazo">Confirmar até (opcional)</label><input type="date" id="rsvpPrazo"></div></div></div></div>
         <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="observacoes.ativo"><div><strong>Observações</strong><span>Algo importante, como "levar roupa de banho".</span></div></label>

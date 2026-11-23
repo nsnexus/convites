@@ -1,7 +1,7 @@
 import { todos } from './util.js';
 
 // Configurações editáveis no admin. Valores padrão enquanto nada foi salvo.
-export const PADRAO = { whatsapp: '', preco_convite: '3990', preco_musica: '1000' };
+export const PADRAO = { whatsapp: '', preco_convite: '3990', preco_musica: '1000', preco_casamento: '5990' };
 
 export async function lerConfig(env) {
   try {
@@ -13,7 +13,7 @@ export async function lerConfig(env) {
 // Preços em centavos (vêm como texto da tabela)
 export async function lerPrecos(env) {
   const c = await lerConfig(env);
-  return { convite: parseInt(c.preco_convite, 10) || 3990, musica: parseInt(c.preco_musica, 10) || 0 };
+  return { convite: parseInt(c.preco_convite, 10) || 3990, musica: parseInt(c.preco_musica, 10) || 0, casamento: parseInt(c.preco_casamento, 10) || 5990 };
 }
 
 // "39,90", "39.90", "R$ 1.299,90" -> centavos; null se inválido

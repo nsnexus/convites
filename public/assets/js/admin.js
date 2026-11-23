@@ -179,7 +179,8 @@ function selCategorias(atual) {
 // ---------- editor de modelo novo ----------
 const FPS = 24, ed = { arquivo: null, det: null, manual: null, total: 0 };
 const edV = $('edVideo');
-const modeloEd = { id: 'novo', fps: FPS, inicio: 1e9, quadros: [[0, 0, 0, 0]], forma: 'retangulo', chave: true, mascara: null };
+const modeloEd = { id: 'novo', fps: FPS, inicio: 1e9, quadros: [[0, 0, 0, 0]], forma: 'retangulo', chave: true, mascara: null, tipo: 'foto' };
+const ehSelo = () => modeloEd.tipo === 'selo';
 let edComp;
 
 $('novoModelo').onclick = () => {
@@ -187,6 +188,20 @@ $('novoModelo').onclick = () => {
   const s = $('edCat'); s.length = 0;
   categorias.forEach(c => s.append(new Option(c.nome, c.id)));
   s.append(new Option('+ Nova categoria…', '__nova'));
+  if (ehSelo() && categorias.some(c => c.id === 'casamento')) s.value = 'casamento';
+};
+$('edTipo').onchange = e => {
+  modeloEd.tipo = e.target.value;
+  const selo = ehSelo();
+  $('edTipoAjuda').textContent = selo ? 'O vídeo começa parado no envelope com um selo liso (sem letras). As iniciais do casal entram no selo.' : 'O vídeo termina numa moldura branca onde entra a foto do cliente.';
+  $('edCampoForma').hidden = selo; $('edChave').closest('label').hidden = selo;
+  $('edInicioRot').textContent = selo ? 'As iniciais somem em' : 'Começar a foto em';
+  // sensibilidade padrão: selo é creme/marfim, moldura é branca
+  $('edLimiar').value = selo ? 190 : 225; $('edSat').value = selo ? 45 : 18;
+  $('edLimiarTxt').textContent = $('edLimiar').value; $('edSatTxt').textContent = $('edSat').value;
+  if (selo && categorias.some(c => c.id === 'casamento')) $('edCat').value = 'casamento';
+  if (edComp) { if (selo) edComp.definirIniciais('L&R'); else edComp.definirFoto(fotoExemplo()); }
+  if (ed.arquivo) { sairManual(); detectar(); }
 };
 $('edCat').onchange = async e => {
   if (e.target.value !== '__nova') return;
@@ -210,7 +225,7 @@ $('edArquivo').onchange = async e => {
   if (f.size > 90 * 1048576) erroEd('Vídeo acima de 90 MB. Exporte em 720p com compressão antes de enviar.');
   else if (f.size > 15 * 1048576) $('edInfo').textContent += '. Dica: exportar em 720p deixa o convite abrindo mais rápido.';
   ed.total = Math.floor(edV.duration * FPS);
-  if (!edComp) { edComp = new Compositor($('edCanvas'), edV, modeloEd); edComp.definirFoto(fotoExemplo()); }
+  if (!edComp) { edComp = new Compositor($('edCanvas'), edV, modeloEd); if (ehSelo()) edComp.definirIniciais('L&R'); else edComp.definirFoto(fotoExemplo()); }
   modeloEd.inicio = 1e9; edV.play().catch(() => {});
   $('edDeteccao').hidden = false;
   detectar();
@@ -218,21 +233,26 @@ $('edArquivo').onchange = async e => {
 
 async function detectar() {
   $('edErro').hidden = true; $('edPublicar').disabled = true; $('edCampoInicio').hidden = true;
-  $('edStatus').textContent = 'Procurando a moldura branca…'; $('edBarra').hidden = false;
+  $('edStatus').textContent = ehSelo() ? 'Procurando o selo…' : 'Procurando a moldura branca…'; $('edBarra').hidden = false;
   const v2 = el('video', { muted: true, playsInline: true, preload: 'auto', src: edV.src });
   await new Promise(ok => v2.addEventListener('loadeddata', ok, { once: true }));
   try {
-    const r = await new Rastreador(v2).rodar({
-      limiar: +$('edLimiar').value, sat: +$('edSat').value, fechar: $('edFechar').checked,
-      progresso: p => $('edBarra').firstElementChild.style.width = `${Math.round(p * 100)}%`,
-    });
+    const opcoes = { limiar: +$('edLimiar').value, sat: +$('edSat').value, fechar: $('edFechar').checked,
+      progresso: p => $('edBarra').firstElementChild.style.width = `${Math.round(p * 100)}%` };
+    const rast = new Rastreador(v2);
+    const r = ehSelo() ? await rast.rodarSelo(opcoes) : await rast.rodar(opcoes);
     ed.det = r; ed.manual = null;
-    configurarInicio(r.inicio / FPS);
-    $('edStatus').textContent = `Moldura encontrada. A foto aparece em ${(r.inicio / FPS).toFixed(1)} s. Confira na prévia.`;
+    if (ehSelo()) {
+      configurarFim(r.quadros.length / FPS, r.quadros.length / FPS);
+      $('edStatus').textContent = `Selo encontrado. As iniciais ficam no selo até ${(r.quadros.length / FPS).toFixed(1)} s. Confira na prévia.`;
+    } else {
+      configurarInicio(r.inicio / FPS);
+      $('edStatus').textContent = `Moldura encontrada. A foto aparece em ${(r.inicio / FPS).toFixed(1)} s. Confira na prévia.`;
+    }
     $('edPublicar').disabled = false; verFoto();
   } catch (err) {
     $('edStatus').textContent = '';
-    erroEd(`${err.message} Ajuste a sensibilidade em "A moldura não ficou certa?" ou marque a moldura na mão.`);
+    erroEd(`${err.message} Ajuste a sensibilidade em "A moldura não ficou certa?" ou marque ${ehSelo() ? 'o selo' : 'a moldura'} na mão.`);
     document.querySelector('.avancado').open = true;
   } finally { $('edBarra').hidden = true; }
 }
@@ -240,7 +260,19 @@ function configurarInicio(min) {
   const s = $('edInicio'); s.min = min.toFixed(2); s.max = ((ed.total - 1) / FPS).toFixed(2); s.value = min.toFixed(2);
   $('edCampoInicio').hidden = false; aplicarInicio();
 }
+// selo: o controle define até quando as iniciais aparecem (o rastreio vai do começo até ali)
+function configurarFim(max, valor) {
+  const s = $('edInicio'); s.min = (.5).toFixed(2); s.max = max.toFixed(2); s.value = valor.toFixed(2);
+  $('edCampoInicio').hidden = false; aplicarInicio();
+}
 function aplicarInicio() {
+  if (ehSelo()) {
+    const fim = Math.max(1, Math.round(+$('edInicio').value * FPS));
+    $('edInicioTxt').textContent = `${(fim / FPS).toFixed(1)} s`;
+    modeloEd.inicio = 0;
+    modeloEd.quadros = ed.manual ? Array.from({ length: fim }, () => ed.manual) : (ed.det ? ed.det.quadros.slice(0, fim) : modeloEd.quadros);
+    edComp?.desenhar(); return;
+  }
   const ini = Math.round(+$('edInicio').value * FPS);
   $('edInicioTxt').textContent = `${(ini / FPS).toFixed(1)} s`;
   if (ed.manual) { modeloEd.inicio = ini; modeloEd.quadros = [ed.manual]; }
@@ -248,13 +280,16 @@ function aplicarInicio() {
   edComp?.desenhar();
 }
 $('edInicio').oninput = aplicarInicio;
-$('edInicio').onchange = verFoto;
+$('edInicio').onchange = () => verFoto();
 $('edForma').onchange = e => { modeloEd.forma = e.target.value; edComp?.desenhar(); };
 $('edChave').onchange = e => { modeloEd.chave = e.target.checked; edComp?.desenhar(); };
 $('edLimiar').oninput = e => $('edLimiarTxt').textContent = e.target.value;
 $('edSat').oninput = e => $('edSatTxt').textContent = e.target.value;
 $('edDetectar').onclick = () => { sairManual(); detectar(); };
-function verFoto() { edV.currentTime = Math.min(edV.duration - .3, modeloEd.inicio / FPS + .3); edV.play().catch(() => {}); }
+function verFoto() {
+  if (ehSelo()) { edV.currentTime = 0; edV.play().catch(() => {}); return; }
+  edV.currentTime = Math.min(edV.duration - .3, modeloEd.inicio / FPS + .3); edV.play().catch(() => {});
+}
 $('edVerFoto').onclick = verFoto;
 $('edDoInicio').onclick = () => { edV.currentTime = 0; edV.play().catch(() => {}); };
 function erroEd(t) { $('edErro').textContent = t; $('edErro').hidden = false; }
@@ -263,11 +298,11 @@ function erroEd(t) { $('edErro').textContent = t; $('edErro').hidden = false; }
 const mc = $('edMarcar');
 $('edManual').onclick = () => {
   if (!ed.arquivo) return erroEd('Escolha o vídeo primeiro.');
-  edV.pause(); edV.currentTime = edV.duration - .05;
+  edV.pause(); edV.currentTime = ehSelo() ? 0 : edV.duration - .05;
   mc.hidden = false; $('edManualAjuda').hidden = false;
   mc.width = mc.clientWidth; mc.height = mc.clientHeight;
   mc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  avisar('Arraste sobre a prévia para marcar a moldura.');
+  avisar(ehSelo() ? 'Arraste sobre a prévia para marcar o selo.' : 'Arraste sobre a prévia para marcar a moldura.');
 };
 function sairManual() { mc.hidden = true; $('edManualAjuda').hidden = true; }
 let arrasto = null;
@@ -283,8 +318,14 @@ mc.onpointerup = () => {
   if (Math.abs(c - a) < .05 || Math.abs(d - b) < .05) return;
   ed.manual = [Math.min(a, c), Math.min(b, d), Math.abs(c - a), Math.abs(d - b)].map(n => +n.toFixed(4));
   ed.det = null; sairManual();
-  configurarInicio(0); $('edInicio').value = Math.max(0, (ed.total - 2 * FPS) / FPS).toFixed(2); aplicarInicio();
-  $('edStatus').textContent = 'Moldura marcada. Escolha a partir de quando a foto aparece.'; $('edErro').hidden = true;
+  if (ehSelo()) {
+    configurarFim((ed.total - 1) / FPS, Math.min(2.5, (ed.total - 1) / FPS));
+    $('edStatus').textContent = 'Selo marcado. Escolha até quando as iniciais aparecem (antes do selo quebrar).';
+  } else {
+    configurarInicio(0); $('edInicio').value = Math.max(0, (ed.total - 2 * FPS) / FPS).toFixed(2); aplicarInicio();
+    $('edStatus').textContent = 'Moldura marcada. Escolha a partir de quando a foto aparece.';
+  }
+  $('edErro').hidden = true;
   $('edPublicar').disabled = false; verFoto();
 };
 
@@ -318,7 +359,7 @@ $('edPublicar').onclick = async () => {
     bt.textContent = 'Salvando…';
     await api('modelos', { metodo: 'POST', corpo: {
       id: links.id, nome, categoria_id: $('edCat').value, video_url: links.video.publico, poster_url: links.capa.publico,
-      inicio: modeloEd.inicio, quadros: modeloEd.quadros, forma: modeloEd.forma, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked,
+      inicio: modeloEd.inicio, quadros: modeloEd.quadros, forma: ehSelo() ? 'circulo' : modeloEd.forma, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked, tipo: modeloEd.tipo,
     } });
     avisar($('edExclusivo').checked ? 'Modelo exclusivo publicado. Escolha ele no pedido especial.' : 'Modelo publicado na vitrine.');
     $('editor').hidden = true; edV.pause(); $('edArquivo').value = ''; $('edNome').value = ''; $('edDeteccao').hidden = true;
@@ -332,13 +373,13 @@ const formatarZap = d => d ? `(${d.slice(2, 4)}) ${d.slice(4, -4)}-${d.slice(-4)
 const realBR = c => (c / 100).toFixed(2).replace('.', ',');
 function mostrarConfig(c) {
   $('cfgZap').value = formatarZap(c.whatsapp);
-  $('cfgPreco').value = realBR(+c.preco_convite); $('cfgMusica').value = realBR(+c.preco_musica);
+  $('cfgPreco').value = realBR(+c.preco_convite); $('cfgMusica').value = realBR(+c.preco_musica); $('cfgCasamento').value = realBR(+c.preco_casamento);
   $('cfgTestar').hidden = !c.whatsapp; $('cfgTestar').href = c.whatsapp ? `https://wa.me/${c.whatsapp}` : '#';
 }
 async function carregarConfigAdm() { mostrarConfig(await api('config')); }
 $('formConfig').onsubmit = async e => {
   e.preventDefault(); $('erroConfig').hidden = true;
-  try { mostrarConfig(await api('config', { metodo: 'PATCH', corpo: { whatsapp: $('cfgZap').value, preco_convite: $('cfgPreco').value, preco_musica: $('cfgMusica').value } })); avisar('Configurações salvas. O site atualiza em até 1 minuto.'); }
+  try { mostrarConfig(await api('config', { metodo: 'PATCH', corpo: { whatsapp: $('cfgZap').value, preco_convite: $('cfgPreco').value, preco_musica: $('cfgMusica').value, preco_casamento: $('cfgCasamento').value } })); avisar('Configurações salvas. O site atualiza em até 1 minuto.'); }
   catch (err) { $('erroConfig').textContent = err.message; $('erroConfig').hidden = false; }
 };
 

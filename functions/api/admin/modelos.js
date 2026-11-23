@@ -5,7 +5,7 @@ const validarQuadros = (q) => Array.isArray(q) && q.length > 0 && q.length < 200
   q.every(r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= -0.1 && n <= 1.1));
 
 export async function onRequestGet({ env }) {
-  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
+  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, tipo, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
   return json(ms.map(m => ({ ...m, ativo: !!m.ativo, exclusivo: !!m.exclusivo })));
 }
 
@@ -18,10 +18,11 @@ export async function onRequestPost({ request, env }) {
   if (!ehNossoArquivo(env, b.video_url) || !ehNossoArquivo(env, b.poster_url)) return json({ erro: 'Arquivos inválidos.' }, 400);
   const id = limpo(b.id) || aleatorio(8);
   const ult = await um(env, 'SELECT MAX(ordem) AS o FROM modelos');
-  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, chave, quadros, exclusivo, ativo, ordem)
-    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, 1, ?)`,
+  const tipo = b.tipo === 'selo' ? 'selo' : 'foto';
+  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, chave, quadros, exclusivo, ativo, ordem, tipo)
+    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, 1, ?, ?)`,
     id, nome, b.categoria_id ? limpo(b.categoria_id) : null, b.video_url, b.poster_url, Math.max(0, b.inicio | 0),
-    b.forma === 'circulo' ? 'circulo' : 'retangulo', bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1);
+    b.forma === 'circulo' ? 'circulo' : 'retangulo', bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1, tipo);
   return json({ id });
 }
 

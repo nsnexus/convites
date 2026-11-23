@@ -15,8 +15,6 @@ export async function onRequestPost({ request, env }) {
   for (const [k, nome] of Object.entries(obrig)) if (!txt(fd, k)) return json({ erro: `Falta preencher: ${nome}.` }, 400);
   const email = txt(fd, 'email', 120).toLowerCase();
   if (!emailValido(email)) return json({ erro: 'Confira o e-mail.' }, 400);
-  if (!(foto instanceof File) || foto.size === 0) return json({ erro: 'Envie a foto.' }, 400);
-  if (foto.size > 6 * 1048576) return json({ erro: 'A foto passou de 6 MB.' }, 400);
 
   let modelo = limpo(txt(fd, 'modelo', 20)), especial = null;
   const token = limpo(txt(fd, 'pedido', 20), /[^a-z0-9]/g);
@@ -26,8 +24,13 @@ export async function onRequestPost({ request, env }) {
     if (especial.modelo_id) modelo = especial.modelo_id;
   }
   // modelo precisa existir; exclusivo só vale se for o do pedido especial
-  const m = await um(env, 'SELECT id, ativo, exclusivo FROM modelos WHERE id = ?', modelo);
+  const m = await um(env, 'SELECT id, ativo, exclusivo, tipo, categoria_id FROM modelos WHERE id = ?', modelo);
   if (!m || (m.exclusivo && especial?.modelo_id !== m.id) || (!m.ativo && !especial)) return json({ erro: 'Modelo inválido.' }, 400);
+
+  const casamento = m.tipo === 'selo' || m.categoria_id === 'casamento';
+  const temFoto = foto instanceof File && foto.size > 0;
+  if (!casamento && !temFoto) return json({ erro: 'Envie a foto.' }, 400);
+  if (temFoto && foto.size > 6 * 1048576) return json({ erro: 'A foto passou de 6 MB.' }, 400);
 
   let ajuste = { zoom: 1, x: .5, y: .5 };
   try { const a = JSON.parse(txt(fd, 'ajuste', 200)); ajuste = { zoom: Math.min(3, Math.max(1, +a.zoom || 1)), x: Math.min(1, Math.max(0, +a.x)), y: Math.min(1, Math.max(0, +a.y)) }; } catch {}
@@ -46,9 +49,9 @@ export async function onRequestPost({ request, env }) {
   else await rodar(env, 'UPDATE clientes SET nome = ?, whatsapp = ? WHERE id = ?', nome, whatsapp, cli.id);
 
   try {
-    const foto_url = await salvarArquivo(env, `fotos/${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), 'image/jpeg');
+    const foto_url = temFoto ? await salvarArquivo(env, `fotos/${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), 'image/jpeg') : '';
     const precos = await lerPrecos(env);
-    const id = uuid(), tokenEdicao = aleatorio(24), valor = especial ? especial.valor_centavos : precos.convite + (musica === 'personalizada' ? precos.musica : 0);
+    const id = uuid(), tokenEdicao = aleatorio(24), valor = especial ? especial.valor_centavos : (casamento ? precos.casamento : precos.convite) + (musica === 'personalizada' ? precos.musica : 0);
     await rodar(env, `INSERT INTO convites (id, slug, cliente_id, modelo, tipo, pedido_especial_id, homenageado, idade, titulo, data, hora, local, endereco, recado, presentes,
       foto_url, ajuste, musica, cliente_nome, cliente_whatsapp, cliente_email, valor_centavos, token_painel, personalizacao) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       id, slug, cli.id, modelo, especial ? 'especial' : 'padrao', especial?.id ?? null,

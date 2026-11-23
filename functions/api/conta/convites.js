@@ -17,7 +17,7 @@ export async function onRequestGet({ request, env, data }) {
   }
   const c = await um(env, 'SELECT id, slug, status, homenageado, idade, titulo, data, hora, local, endereco, recado, personalizacao, valor_centavos FROM convites WHERE slug = ? AND cliente_id = ?', slug, data.clienteId);
   if (!c) return json({ erro: 'Convite não encontrado.' }, 404);
-  const conf = (await todos(env, 'SELECT nome, vai, pessoas, adultos, criancas, presente, recado, criado_em FROM confirmacoes WHERE convite_id = ? ORDER BY criado_em DESC', c.id)).map(x => ({ ...x, vai: !!x.vai }));
+  const conf = (await todos(env, 'SELECT nome, vai, pessoas, adultos, criancas, presente, recado, restricoes, criado_em FROM confirmacoes WHERE convite_id = ? ORDER BY criado_em DESC', c.id)).map(x => ({ ...x, vai: !!x.vai }));
   c.pedido_id = c.id; delete c.id; c.personalizacao = JSON.parse(c.personalizacao || '{}');
   return json({ cliente: cli, convite: c, confirmacoes: conf });
 }

@@ -1,5 +1,5 @@
 import { carregarModelos } from './compositor.js';
-import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes } from './estilos.js';
+import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento } from './estilos.js';
 import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js';
 
 const $ = id => document.getElementById(id);
@@ -43,12 +43,18 @@ function atualizar() {
 }
 function dadosPrevia() {
   const v = id => $(id).value.trim();
+  if (ehCasamento(modelo)) {
+    pers.casal = { nome1: v('nome1'), nome2: v('nome2'), iniciais: v('iniciais') || iniciaisAuto() };
+    pers.blocos.convite = { texto: v('recado'), versiculo: v('versiculo') };
+    pers.encerramento = v('encerramento');
+  }
   return {
-    slug: 'previa', homenageado: v('homenageado') || 'Nome', idade: v('idade'), titulo: v('tituloConvite'),
+    slug: 'previa', homenageado: ehCasamento(modelo) ? `${v('nome1') || 'Noiva'} & ${v('nome2') || 'Noivo'}` : (v('homenageado') || 'Nome'), idade: v('idade'), titulo: v('tituloConvite'),
     data: v('data') || proximoSabado(), hora: v('hora') || '19:00', local: v('local') || 'Local da festa', endereco: v('endereco') || 'Endereço da festa',
     recado: v('recado'), personalizacao: pers, modelo_dados: modelo, foto_url: fotoSrc, ajuste,
   };
 }
+function iniciaisAuto() { const a = $('nome1').value.trim(), b = $('nome2').value.trim(); return a && b ? `${a[0].toUpperCase()}&${b[0].toUpperCase()}` : ''; }
 function proximoSabado() { const d = new Date(Date.now() + 30 * 864e5); d.setDate(d.getDate() + (6 - d.getDay())); return d.toISOString().slice(0, 10); }
 document.querySelectorAll('[data-ir]').forEach(b => b.onclick = () => iframe.contentWindow.irPara?.(b.dataset.ir));
 $('verFone').onclick = () => { $('lado').classList.add('aberto'); atualizar(); };
@@ -63,11 +69,26 @@ dados.categorias.forEach(c => {
 if (!$('modelo').value || ![...$('modelo').options].some(o => o.value === modelo.id)) $('modelo').append(new Option(modelo.nome, modelo.id, true, true));
 if (especial?.modelo || existente) $('modelo').disabled = true;
 $('modeloCapa').src = modelo.poster;
+function aplicarModo() {
+  const cas = ehCasamento(modelo);
+  if (cas !== (pers.estilo || '').startsWith('cas-')) { pers.estilo = cas ? 'cas-bordo' : 'classico'; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
+  document.body.classList.toggle('modo-casamento', cas);
+  $('tit2').textContent = cas ? 'O casal e a cerimônia' : 'A festa';
+  $('rotHora').textContent = cas ? 'Horário da cerimônia' : 'Horário';
+  $('rotLocal').textContent = cas ? 'Local da cerimônia' : 'Nome do local';
+  $('rotEndereco').textContent = cas ? 'Endereço da cerimônia' : 'Endereço';
+  $('rotRecado').textContent = cas ? 'Texto do convite' : 'Mensagem de abertura';
+  $('recado').placeholder = cas ? 'Ex.: Com a bênção de Deus e de nossas famílias, convidamos você para celebrar o nosso casamento.' : 'Ex.: Venha celebrar comigo esse dia tão especial!';
+  $('homenageado').required = !cas;
+  pintarEstilos();
+  if (!existente) $('total').textContent = reais(total());
+}
 $('modelo').onchange = e => {
   const novo = dados.modelos.find(m => m.id === e.target.value);
+  if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   // se o cliente ainda não mexeu no estilo, acompanha a categoria do vídeo
   if (pers.estilo === personalizacaoPadrao(modelo.categoria).estilo) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
-  modelo = novo; $('modeloCapa').src = modelo.poster; atualizar(); iframe.contentWindow.irPara?.('video');
+  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); atualizar(); iframe.contentWindow.irPara?.('video');
 };
 if (existente) { $('btFoto').hidden = true; $('fotoInfo').textContent = 'A foto não pode ser trocada depois do pedido, mas você pode ajustar o enquadramento.'; $('ajustes').hidden = false; }
 else if (fotoSrc) { $('ajustes').hidden = false; $('fotoInfo').textContent = 'Usando a foto que você testou na página inicial.'; }
@@ -88,11 +109,16 @@ $('foto').onchange = async e => {
 ['zoom', 'px', 'py'].forEach(id => $(id).onchange = () => iframe.contentWindow.irPara?.('foto'));
 
 // ---------- 2. festa ----------
-['homenageado', 'idade', 'tituloConvite', 'data', 'hora', 'local', 'endereco', 'recado'].forEach(id => $(id).addEventListener('input', atualizar));
+['homenageado', 'idade', 'tituloConvite', 'data', 'hora', 'local', 'endereco', 'recado', 'nome1', 'nome2', 'iniciais', 'versiculo', 'encerramento'].forEach(id => $(id).addEventListener('input', atualizar));
+['nome1', 'nome2'].forEach(id => $(id).addEventListener('input', () => { if (!$('iniciais').dataset.mexeu) $('iniciais').value = iniciaisAuto(); atualizar(); }));
+$('iniciais').addEventListener('input', () => $('iniciais').dataset.mexeu = '1');
 if (existente) {
   const set = (id, v) => $(id).value = v || '';
   set('homenageado', existente.homenageado); set('idade', existente.idade); set('tituloConvite', existente.titulo); set('data', existente.data);
   set('hora', existente.hora); set('local', existente.local); set('endereco', existente.endereco); set('recado', existente.recado);
+  const k = existente.personalizacao?.casal || {}; set('nome1', k.nome1); set('nome2', k.nome2); set('iniciais', k.iniciais); if (k.iniciais) $('iniciais').dataset.mexeu = '1';
+  set('versiculo', existente.personalizacao?.blocos?.convite?.versiculo); set('encerramento', existente.personalizacao?.encerramento);
+  if (ehCasamento(modelo) && existente.personalizacao?.blocos?.convite?.texto) set('recado', existente.personalizacao.blocos.convite.texto);
 }
 
 // ---------- 3. estilo ----------
@@ -100,9 +126,10 @@ carregarFontes(Object.values(FONTES).map(f => f.google));
 function pintarEstilos() {
   const box = $('estilos'); box.textContent = '';
   let grupoAtual;
-  ESTILOS.forEach(e => {
+  const cas = ehCasamento(modelo);
+  ESTILOS.filter(e => (e.grupo === 'casamento') === cas).forEach(e => {
     const g = e.grupo || 'tema';
-    if (g !== grupoAtual) { grupoAtual = g; const t = document.createElement('p'); t.className = 'grupo-estilos'; t.textContent = g === 'min' ? 'Minimalistas' : 'Temáticos'; box.append(t); }
+    if (g !== grupoAtual) { grupoAtual = g; const t = document.createElement('p'); t.className = 'grupo-estilos'; t.textContent = g === 'min' ? 'Minimalistas' : g === 'casamento' ? 'Casamento' : 'Temáticos'; box.append(t); }
     const b = document.createElement('button'); b.type = 'button'; b.className = 'estilo'; b.setAttribute('aria-pressed', e.id === pers.estilo);
     b.innerHTML = `<span class="amostra" aria-hidden="true">Aa<i></i></span><span class="nome"></span>`;
     const a = b.querySelector('.amostra'); a.style.background = e.cores.fundo; a.style.color = e.cores.texto; a.style.fontFamily = FONTES[e.titulo].css;
@@ -160,7 +187,18 @@ function pintarTraje() {
     box.append(add);
   }
 }
-pintarTraje();
+function pintarEvitar() {
+  const box = $('trajeEvitar'); box.textContent = ''; const lista = pers.blocos.traje.evitar ||= [];
+  lista.forEach((c, i) => {
+    const inp = Object.assign(document.createElement('input'), { type: 'color', value: c, ariaLabel: `Cor para evitar ${i + 1}` });
+    inp.oninput = () => { lista[i] = inp.value; atualizar(); };
+    const x = Object.assign(document.createElement('button'), { type: 'button', className: 'mini-bt', textContent: 'remover' });
+    x.onclick = () => { lista.splice(i, 1); pintarEvitar(); atualizar(); };
+    const w = document.createElement('span'); w.style.cssText = 'display:grid;justify-items:center'; w.append(inp, x); box.append(w);
+  });
+  if (lista.length < 4) { const add = Object.assign(document.createElement('button'), { type: 'button', className: 'mini-bt', textContent: '+ Cor para evitar' }); add.onclick = () => { lista.push('#ffffff'); pintarEvitar(); atualizar(); }; box.append(add); }
+}
+pintarTraje(); pintarEvitar();
 const ligar = (id, get, set) => { $(id).value = get() ?? ''; $(id).addEventListener('input', () => { set($(id).value); atualizar(); }); };
 ligar('trajeTexto', () => pers.blocos.traje.texto, v => pers.blocos.traje.texto = v);
 ligar('presItens', () => pers.blocos.presentes.itens.join('\n'), v => pers.blocos.presentes.itens = v.split('\n').map(s => s.trim()).filter(Boolean));
@@ -169,6 +207,15 @@ ligar('presTam', () => pers.blocos.presentes.tamanhos, v => pers.blocos.presente
 ligar('rsvpLimite', () => pers.blocos.rsvp.limite, v => pers.blocos.rsvp.limite = Math.min(30, Math.max(1, parseInt(v, 10) || 1)));
 ligar('rsvpPrazo', () => pers.blocos.rsvp.prazo, v => pers.blocos.rsvp.prazo = v);
 ligar('obsTexto', () => pers.blocos.observacoes.texto, v => pers.blocos.observacoes.texto = v);
+ligar('recLocal', () => pers.blocos.recepcao.local, v => pers.blocos.recepcao.local = v);
+ligar('recEnd', () => pers.blocos.recepcao.endereco, v => pers.blocos.recepcao.endereco = v);
+ligar('recHora', () => pers.blocos.recepcao.hora, v => pers.blocos.recepcao.hora = v);
+ligar('histTexto', () => pers.blocos.historia.texto, v => pers.blocos.historia.texto = v);
+ligar('presTexto', () => pers.blocos.presentes.texto, v => pers.blocos.presentes.texto = v);
+ligar('presLink', () => pers.blocos.presentes.link, v => pers.blocos.presentes.link = v.trim());
+ligar('presBanco', () => pers.blocos.presentes.banco, v => pers.blocos.presentes.banco = v);
+$('rsvpRestr').checked = !!pers.blocos.rsvp.restricoes;
+$('rsvpRestr').onchange = e => { pers.blocos.rsvp.restricoes = e.target.checked; atualizar(); };
 $('rsvpCriancas').checked = pers.blocos.rsvp.criancas;
 $('rsvpCriancas').onchange = e => { pers.blocos.rsvp.criancas = e.target.checked; atualizar(); };
 
@@ -185,21 +232,25 @@ if (existente) {
   $('totalRotulo').textContent = 'Convite'; $('total').textContent = existente.previa ? 'Prévia' : 'No ar';
   $('enviar').textContent = 'Salvar alterações';
 }
-const total = () => especial ? especial.valor_centavos : CONFIG.precoConvite + (document.querySelector('[name=musica]:checked').value === 'personalizada' ? CONFIG.precoMusica : 0);
+const total = () => especial ? especial.valor_centavos : (ehCasamento(modelo) ? CONFIG.precoCasamento : CONFIG.precoConvite) + (document.querySelector('[name=musica]:checked').value === 'personalizada' ? CONFIG.precoMusica : 0);
 if (!existente) { document.querySelectorAll('[name=musica]').forEach(r => r.onchange = () => $('total').textContent = reais(total())); $('total').textContent = reais(total()); }
+aplicarModo();
 
 function mostrarErro(t) { $('erro').textContent = t; $('erro').hidden = false; $('erro').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
 
 // ---------- enviar ----------
 $('form').onsubmit = async e => {
   e.preventDefault(); $('erro').hidden = true;
-  const visiveis = [...$('form').querySelectorAll('[required]')].filter(i => !i.closest('[hidden]'));
+  const visiveis = [...$('form').querySelectorAll('[required]')].filter(i => !i.closest('[hidden]') && i.offsetParent !== null);
+  const cas = ehCasamento(modelo);
+  if (cas && (!$('nome1').value.trim() || !$('nome2').value.trim())) { (!$('nome1').value.trim() ? $('nome1') : $('nome2')).focus(); return mostrarErro('Preencha os nomes do casal.'); }
+  dadosPrevia(); // garante casal e texto do convite atualizados em pers
   const falta = visiveis.find(i => !i.value.trim());
   if (falta) { falta.focus(); return mostrarErro(`Preencha o campo "${$('form').querySelector(`label[for=${falta.id}]`).textContent}".`); }
   const bt = $('enviar'); bt.disabled = true;
 
   if (existente) {
-    const corpo = { slug: existente.slug, homenageado: $('homenageado').value, idade: $('idade').value, titulo: $('tituloConvite').value, data: $('data').value, hora: $('hora').value,
+    const corpo = { slug: existente.slug, homenageado: cas ? `${$('nome1').value.trim()} & ${$('nome2').value.trim()}` : $('homenageado').value, idade: $('idade').value, titulo: $('tituloConvite').value, data: $('data').value, hora: $('hora').value,
       local: $('local').value, endereco: $('endereco').value, recado: $('recado').value, personalizacao: pers, ajuste };
     const token = JSON.parse(localStorage.getItem('nsPedidos') || '{}')[existente.slug]?.token;
     try {
@@ -212,15 +263,16 @@ $('form').onsubmit = async e => {
     return;
   }
 
-  if (!arquivoFoto) { bt.disabled = false; return mostrarErro('Escolha a foto que vai aparecer na moldura.'); }
+  if (!arquivoFoto && !cas) { bt.disabled = false; return mostrarErro('Escolha a foto que vai aparecer na moldura.'); }
   if ($('whatsapp').value.replace(/\D/g, '').length < 10) { bt.disabled = false; $('whatsapp').focus(); return mostrarErro('Confira o número de WhatsApp com DDD.'); }
   if (!$('email').checkValidity()) { bt.disabled = false; $('email').focus(); return mostrarErro('Confira o e-mail. É nele que o link do convite chega.'); }
   const fd = new FormData();
   ['homenageado', 'idade', 'data', 'hora', 'local', 'endereco', 'recado', 'cliente', 'whatsapp', 'email'].forEach(id => fd.set(id, $(id).value));
-  fd.set('titulo', $('tituloConvite').value);
+  fd.set('titulo', cas ? '' : $('tituloConvite').value);
+  if (cas) fd.set('homenageado', `${$('nome1').value.trim()} & ${$('nome2').value.trim()}`);
   fd.set('musica', document.querySelector('[name=musica]:checked').value);
   fd.set('modelo', modelo.id); fd.set('ajuste', JSON.stringify(ajuste)); fd.set('personalizacao', JSON.stringify(pers));
-  fd.set('foto', arquivoFoto, 'foto.jpg');
+  if (arquivoFoto && !cas) fd.set('foto', arquivoFoto, 'foto.jpg');
   if (tokenEspecial) fd.set('pedido', tokenEspecial);
   bt.textContent = 'Salvando…';
   try {

@@ -1,5 +1,7 @@
 import { Compositor, carregarModelos, fotoExemplo } from './compositor.js';
 import { renderizarConvite, tituloDe } from './convite-render.js';
+import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js';
+import { ehCasamento } from './estilos.js';
 import { CONFIG, reais } from './config.js';
 
 const $ = id => document.getElementById(id);
@@ -21,14 +23,17 @@ const EXEMPLO = {
 let comp, modeloAtual, fotoAtual;
 const vd = $('vd');
 
-async function montarVideo(modelo, foto, ajuste) {
+// iniciais: para vídeos de selo (casamento), vai no selo no lugar da foto
+async function montarVideo(modelo, foto, ajuste, iniciais) {
   if (!comp) { comp = new Compositor($('cv'), vd, modelo); vd.src = modelo.video; }
   else if (modeloAtual?.id !== modelo.id) comp.trocarModelo(modelo);
   modeloAtual = modelo;
   $('fundo').style.backgroundImage = `url(${modelo.poster})`;
+  if (modelo.tipo === 'selo') { const chave = 'selo:' + iniciais; if (chave !== fotoAtual) { fotoAtual = chave; await comp.definirIniciais(iniciais); } return; }
   if (foto !== fotoAtual) { fotoAtual = foto; if (foto) await comp.definirFoto(foto); else comp.definirFoto(fotoExemplo()); }
   if (ajuste) comp.definirAjuste(ajuste);
 }
+const renderizar = (modelo, ...args) => (ehCasamento(modelo) ? renderizarCasamento : renderizarConvite)(...args);
 
 if (embed) {
   // Prévia dentro do editor: o /criar chama window.atualizarPrevia(dados)
@@ -36,13 +41,13 @@ if (embed) {
   $('estado').remove(); $('app').hidden = false; $('abrir').remove();
   vd.muted = true; vd.loop = true;
   window.atualizarPrevia = async (c) => {
-    await montarVideo(c.modelo_dados, c.foto_url, c.ajuste);
+    await montarVideo(c.modelo_dados, c.foto_url, c.ajuste, iniciaisCasal(c));
     if (vd.paused) vd.play().catch(() => {});
-    renderizarConvite($('convite'), c, { modo: 'editor' });
+    renderizar(c.modelo_dados, $('convite'), c, { modo: 'editor' });
   };
   window.irPara = (onde) => {
     if (onde === 'video') { scrollTo({ top: 0, behavior: 'smooth' }); vd.currentTime = 0; vd.play().catch(() => {}); }
-    else if (onde === 'foto') { scrollTo({ top: 0, behavior: 'smooth' }); vd.currentTime = Math.min(9.4, modeloAtual.inicio / modeloAtual.fps + 1.4); vd.play().catch(() => {}); }
+    else if (onde === 'foto') { scrollTo({ top: 0, behavior: 'smooth' }); vd.currentTime = modeloAtual.tipo === 'selo' ? 0 : Math.min(9.4, modeloAtual.inicio / modeloAtual.fps + 1.4); vd.play().catch(() => {}); }
     else $('detalhes')?.scrollIntoView({ behavior: 'smooth' });
   };
   window.parent.postMessage({ tipo: 'previa-pronta' }, location.origin);
@@ -59,10 +64,11 @@ if (embed) {
 
   let modelo = c.modelo_dados;
   if (!modelo) { const { modelos } = await carregarModelos(); modelo = modelos.find(m => m.id === c.modelo) || modelos[0]; }
-  document.title = `${tituloDe(c)} | Convite`;
-  await montarVideo(modelo, c.foto_url, c.ajuste);
+  const casamento = ehCasamento(modelo);
+  document.title = casamento ? `Casamento ${nomesCasal(c).join(' & ')}` : `${tituloDe(c)} | Convite`;
+  await montarVideo(modelo, c.foto_url, c.ajuste, iniciaisCasal(c));
   vd.addEventListener('loadeddata', () => comp.desenhar(), { once: true });
-  renderizarConvite($('convite'), c, {
+  renderizar(modelo, $('convite'), c, {
     modo: c.previa ? 'previa' : 'real',
     aoConfirmar: async corpo => {
       if (c.slug === 'exemplo') return;
@@ -75,6 +81,13 @@ if (embed) {
 
   let musica;
   if (c.musica_url) { musica = new Audio(c.musica_url); musica.loop = true; }
+  if (casamento) {
+    // abertura do casamento: o vídeo fica parado no envelope até a pessoa tocar no selo
+    $('abrir').querySelector('span').lastChild.textContent = 'Toque no selo para abrir';
+    $('abrir').style.background = 'transparent';
+    vd.addEventListener('loadeddata', () => { vd.currentTime = .01; }, { once: true });
+    vd.addEventListener('ended', () => setTimeout(() => $('detalhes')?.scrollIntoView({ behavior: 'smooth' }), 250));
+  }
   $('abrir').onclick = () => {
     $('abrir').remove(); $('som').hidden = false;
     vd.muted = false; vd.play().catch(() => { vd.muted = true; vd.play(); });

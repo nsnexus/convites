@@ -1,0 +1,155 @@
+/* Convite de casamento: página com rolagem animada. Cores e fontes vêm de estilos.js (variáveis). */
+.cs{background:var(--fundo);color:var(--texto);font:400 19px/1.6 var(--f-corpo);position:relative;overflow:hidden;margin-top:-2px}
+.cs *{box-sizing:border-box}
+.cs h1,.cs h2,.cs h3{margin:0;font-weight:400}
+.cs p{margin:0}
+.cs a{color:inherit}
+.cs-sec{position:relative;padding:72px 22px;max-width:640px;margin:0 auto;text-align:center}
+.cs-tit{font:400 clamp(2.6rem,11vw,3.6rem)/1.1 var(--f-titulo);color:var(--destaque);margin-bottom:18px!important}
+.cs-sub{font-size:.78rem;letter-spacing:.32em;text-transform:uppercase;color:var(--texto-2);margin-bottom:10px!important}
+.cs-txt{color:var(--texto-2);max-width:32ch;margin:0 auto!important}
+
+/* textura de papel suave */
+.cs::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(circle at 20% 10%,rgba(255,255,255,.6),transparent 40%),radial-gradient(circle at 80% 60%,rgba(255,255,255,.45),transparent 45%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ornamentos botânicos (SVG inline), com parallax */
+.cs-orn{position:absolute;color:var(--destaque);opacity:.85;pointer-events:none;will-change:transform}
+.cs-orn svg{display:block;width:100%;height:auto}
+.cs-orn.te{top:-10px;left:-18px;width:46%}
+.cs-orn.td{top:-10px;right:-18px;width:46%;transform:scaleX(-1)}
+.cs-orn.be{bottom:-14px;left:-18px;width:40%;transform:scaleY(-1)}
+.cs-orn.bd{bottom:-14px;right:-18px;width:40%;transform:scale(-1,-1)}
+
+/* capa */
+.cs-capa{min-height:100svh;display:grid;place-items:center;padding:90px 22px;position:relative;text-align:center}
+.cs-capa .cs-sub{margin-bottom:26px!important}
+.cs-nomes{font:400 clamp(3.4rem,17vw,5.4rem)/1 var(--f-titulo);color:var(--destaque)}
+.cs-nomes span{display:block}
+.cs-nomes .e{font-size:.55em;margin:6px 0;color:var(--texto-2)}
+.cs-data{margin-top:30px;font-size:1.05rem;letter-spacing:.38em;color:var(--texto)}
+.cs-rolar{position:absolute;bottom:26px;left:50%;translate:-50% 0;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--texto-2);display:grid;justify-items:center;gap:6px}
+.cs-rolar i{width:1px;height:38px;background:linear-gradient(var(--destaque),transparent);animation:cs-desce 1.8s ease-in-out infinite}
+@keyframes cs-desce{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+/* nomes que se "escrevem" */
+.cs-capa.ativa .cs-nomes span{animation:cs-escrever 1.6s cubic-bezier(.6,.1,.3,1) both}
+.cs-capa.ativa .cs-nomes span:nth-child(2){animation-delay:.6s}
+.cs-capa.ativa .cs-nomes span:nth-child(3){animation-delay:.9s}
+@keyframes cs-escrever{from{clip-path:inset(0 100% 0 0);opacity:.2}to{clip-path:inset(0 0 0 0);opacity:1}}
+
+/* papel do convite com borda rasgada */
+.cs-papel{background:var(--cartao);padding:52px 28px 40px;position:relative;box-shadow:0 30px 60px -40px rgba(0,0,0,.35);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' preserveAspectRatio='none'%3E%3Cpath d='M0 10 L0 4 Q5 0 10 4 T20 4 T30 4 T40 4 L40 10Z'/%3E%3C/svg%3E") top/40px 10px repeat-x,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10' preserveAspectRatio='none'%3E%3Cpath d='M0 0 L0 6 Q5 10 10 6 T20 6 T30 6 T40 6 L40 0Z'/%3E%3C/svg%3E") bottom/40px 10px repeat-x,
+    linear-gradient(#000,#000) center/100% calc(100% - 18px) no-repeat}
+.cs-selo{width:78px;height:78px;border-radius:50%;margin:-90px auto 18px;display:grid;place-items:center;position:relative;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--destaque) 70%,#fff),var(--destaque) 60%,color-mix(in srgb,var(--destaque) 70%,#000));
+  box-shadow:0 6px 14px -6px rgba(0,0,0,.5),inset 0 -3px 6px rgba(0,0,0,.25);color:color-mix(in srgb,var(--destaque) 55%,#000);font:italic 600 1.5rem var(--f-corpo)}
+.cs-selo::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1.5px solid color-mix(in srgb,var(--destaque) 60%,#000);opacity:.6}
+.cs-selo span{text-shadow:1px 1px 0 color-mix(in srgb,var(--destaque) 75%,#fff)}
+.cs-convite p{font-size:1.15rem;line-height:1.7}
+.cs-versiculo{font-style:italic;color:var(--texto-2);margin-top:22px!important;font-size:1.05rem}
+.cs-assina{font:400 2.2rem/1 var(--f-titulo);color:var(--destaque);margin-top:22px!important}
+
+/* contagem em medalhões */
+.cs-contagem{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.cs-med{width:72px;height:72px;border-radius:50%;display:grid;place-content:center;background:var(--cartao);box-shadow:0 0 0 1px var(--linha),0 0 0 5px var(--cartao),0 0 0 6px var(--destaque-suave)}
+.cs-med b{font:600 1.6rem/1 var(--f-corpo);color:var(--destaque)}
+.cs-med small{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--texto-2)}
+
+/* locais */
+.cs-locais{display:grid;gap:18px}
+.cs-local{background:var(--cartao);padding:30px 22px;border:1px solid var(--linha);position:relative}
+.cs-local::after{content:'';position:absolute;inset:6px;border:1px solid var(--destaque-suave);pointer-events:none}
+.cs-local h3{font:400 2rem/1.1 var(--f-titulo);color:var(--destaque);margin-bottom:8px}
+.cs-local .hora{font-size:.8rem;letter-spacing:.3em;text-transform:uppercase;color:var(--texto-2);display:block;margin-bottom:12px}
+.cs-local strong{display:block;font-size:1.2rem;font-weight:600}
+.cs-local span.end{color:var(--texto-2);font-size:1rem}
+.cs-bts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.cs-bt{font:600 .82rem var(--f-corpo);letter-spacing:.18em;text-transform:uppercase;padding:.9em 1.4em;border:1px solid var(--destaque);background:transparent;color:var(--destaque);cursor:pointer;text-decoration:none}
+.cs-bt.cheio,a.cs-bt.cheio{background:var(--destaque);color:var(--sobre-destaque)}
+
+/* programação com marcador que desce junto com a rolagem */
+.cs-prog{position:relative;margin:10px auto 0;max-width:420px;padding:6px 0}
+.cs-prog .linha{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--linha)}
+.cs-prog .linha i{position:absolute;left:0;top:0;width:1px;background:var(--destaque);height:var(--prog,0%)}
+.cs-prog .marca{position:absolute;left:50%;top:var(--prog,0%);width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--destaque) 60%,#fff),var(--destaque));box-shadow:0 0 0 5px var(--fundo),0 4px 10px -2px rgba(0,0,0,.4);transition:top .15s linear}
+.cs-prog ol{list-style:none;margin:0;padding:0;display:grid;gap:34px}
+.cs-prog li{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+.cs-prog li b{text-align:right;font:600 1.3rem var(--f-corpo);color:var(--destaque)}
+.cs-prog li span{text-align:left;font-size:1.05rem}
+.cs-prog li:nth-child(even) b{order:2;text-align:left}
+.cs-prog li:nth-child(even) span{order:1;text-align:right}
+
+/* traje */
+.cs-cores{display:flex;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+.cs-cores i{width:38px;height:38px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08),0 0 0 3px var(--fundo),0 0 0 4px var(--linha)}
+.cs-cores.evitar i{position:relative}
+.cs-cores.evitar i::after{content:'';position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;background:var(--texto);transform:rotate(45deg);opacity:.7}
+.cs-rot{font-size:.74rem;letter-spacing:.28em;text-transform:uppercase;color:var(--texto-2);margin-top:26px!important}
+
+/* história em arco */
+.cs-arco{border:1px solid var(--destaque);border-radius:260px 260px 6px 6px;padding:70px 26px 40px;position:relative;background:var(--cartao)}
+.cs-arco::before{content:'';position:absolute;inset:7px;border:1px solid var(--destaque-suave);border-radius:250px 250px 2px 2px;pointer-events:none}
+.cs-arco p{white-space:pre-line;color:var(--texto-2)}
+
+/* presentes */
+.cs-pres{display:grid;gap:10px;margin-top:22px}
+.cs-pres li{list-style:none;background:var(--cartao);border:1px solid var(--linha);padding:12px 16px;display:flex;justify-content:space-between;gap:10px;text-align:left}
+.cs-pres small{color:var(--texto-2)}
+.cs-pix{background:var(--cartao);border:1px dashed var(--destaque);padding:18px;margin-top:18px}
+.cs-pix code{display:block;font:600 1rem var(--f-corpo);word-break:break-all;margin:6px 0 12px}
+.cs-banco{white-space:pre-line;font-size:1rem;color:var(--texto-2);margin-top:8px!important}
+
+/* RSVP com selo */
+.cs-rsvp-selo{width:130px;height:130px;border-radius:50%;margin:26px auto 10px;display:grid;place-items:center;border:0;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--destaque) 65%,#fff),var(--destaque) 58%,color-mix(in srgb,var(--destaque) 65%,#000));
+  box-shadow:0 14px 26px -10px rgba(0,0,0,.55),inset 0 -4px 10px rgba(0,0,0,.3);color:var(--sobre-destaque);font:600 1.3rem var(--f-corpo);letter-spacing:.22em;transition:transform .3s}
+.cs-rsvp-selo:hover{transform:rotate(-6deg) scale(1.04)}
+.cs-rsvp-selo span{display:grid;place-items:center;width:104px;height:104px;border-radius:50%;border:1.5px dashed color-mix(in srgb,var(--sobre-destaque) 50%,transparent)}
+.cs-toque{font-style:italic;color:var(--texto-2)}
+.cs-form{background:var(--cartao);padding:26px 20px;margin-top:20px;text-align:left;border:1px solid var(--linha)}
+.cs-form label{display:block;font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;color:var(--texto-2);margin-bottom:6px}
+.cs-form input,.cs-form textarea{width:100%;font:inherit;font-size:1.05rem;color:var(--texto);background:transparent;border:0;border-bottom:1px solid var(--linha);padding:8px 2px;margin-bottom:20px}
+.cs-form input:focus,.cs-form textarea:focus{outline:none;border-color:var(--destaque)}
+.cs-sn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.cs-sn label{margin:0;text-align:center;border:1px solid var(--linha);padding:12px 6px;cursor:pointer;font-size:.8rem;color:var(--texto)}
+.cs-sn label:has(input:checked){border-color:var(--destaque);background:var(--destaque-suave)}
+.cs-sn input{position:absolute;opacity:0}
+.cs-qtd{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.cs-cont{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--linha);padding:4px}
+.cs-cont button{width:38px;height:38px;border:0;background:var(--destaque-suave);color:var(--texto);font-size:1.2rem;cursor:pointer}
+.cs-cont output{font-weight:600;font-size:1.2rem}
+.cs-erro{color:#b3261e;font-weight:600;margin-bottom:12px!important}
+.cs-ok{font:400 2.4rem var(--f-titulo);color:var(--destaque)}
+
+/* fim */
+.cs-fim{padding:90px 22px 70px}
+.cs-fim .cs-nomes{font-size:clamp(2.8rem,13vw,4rem)}
+.cs-rodape{font-size:.78rem;color:var(--texto-2);text-align:center;padding:0 0 30px}
+
+/* divisor de seção */
+.cs-div{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--destaque);margin:0 auto 20px;width:180px}
+.cs-div::before,.cs-div::after{content:'';flex:1;height:1px;background:currentColor;opacity:.5}
+
+/* ===== animação de entrada ao rolar ===== */
+.cs .rv{opacity:0;transform:translateY(46px);transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.7,.2,1)}
+.cs .rv.papel{transform:translateY(60px) rotate(-2.2deg) scale(.97)}
+.cs .rv.zoom{transform:scale(.8)}
+.cs .rv.visto{opacity:1;transform:none}
+.cs .rv[data-atraso="1"]{transition-delay:.12s}.cs .rv[data-atraso="2"]{transition-delay:.24s}.cs .rv[data-atraso="3"]{transition-delay:.36s}.cs .rv[data-atraso="4"]{transition-delay:.48s}
+@media (prefers-reduced-motion:reduce){.cs .rv{opacity:1;transform:none;transition:none}.cs-capa.ativa .cs-nomes span{animation:none}.cs-orn{transform:none!important}}
+
+/* ===== variações por estilo ===== */
+[data-estilo=cas-bordo]{--linha:color-mix(in srgb,var(--destaque) 25%,var(--fundo))}
+[data-estilo=cas-bordo] .cs-capa{background:radial-gradient(ellipse at 50% 30%,color-mix(in srgb,var(--fundo) 80%,#fff),transparent 70%)}
+[data-estilo=cas-salvia] .cs-papel{--cartao:#fbfaf4}
+[data-estilo=cas-salvia] .cs-selo,[data-estilo=cas-salvia] .cs-rsvp-selo{--destaque:#cdb98f}
+[data-estilo=cas-rose] .cs-local,[data-estilo=cas-rose] .cs-arco{border-radius:22px}
+[data-estilo=cas-rose] .cs-local::after{border-radius:16px}
+[data-estilo=cas-marfim] .cs-nomes{letter-spacing:.06em;text-transform:uppercase;font-size:clamp(2.6rem,12vw,4rem)}
+[data-estilo=cas-marfim] .cs-nomes .e{text-transform:none;font-style:italic;font-family:var(--f-corpo)}
+[data-estilo=cas-marfim] .cs-tit{text-transform:uppercase;letter-spacing:.12em;font-size:clamp(1.8rem,8vw,2.4rem)}
+[data-estilo=cas-marfim] .cs-local h3{text-transform:uppercase;letter-spacing:.1em;font-size:1.4rem}
