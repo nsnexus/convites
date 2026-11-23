@@ -22,6 +22,25 @@ const EXEMPLO = {
 
 let comp, modeloAtual, fotoAtual;
 const vd = $('vd');
+let mostrandoAbertura = true;
+function mostrarAbertura() {
+  mostrandoAbertura = true;
+  document.body.classList.add('abertura');
+  $('abertura').hidden = false;
+  $('convite').hidden = true;
+  scrollTo({ top: 0, behavior: 'instant' });
+}
+function mostrarConvite() {
+  mostrandoAbertura = false;
+  vd.pause();
+  $('abertura').hidden = true;
+  $('convite').hidden = false;
+  document.body.classList.remove('abertura');
+  scrollTo({ top: 0, behavior: 'instant' });
+}
+vd.loop = false;
+vd.addEventListener('ended', mostrarConvite);
+mostrarAbertura();
 
 // iniciais: para vídeos de selo (casamento), vai no selo no lugar da foto
 async function montarVideo(modelo, foto, ajuste, iniciais) {
@@ -39,16 +58,29 @@ if (embed) {
   // Prévia dentro do editor: o /criar chama window.atualizarPrevia(dados)
   document.body.classList.add('embed');
   $('estado').remove(); $('app').hidden = false; $('abrir').remove();
-  vd.muted = true; vd.loop = true;
+  vd.muted = true;
+  let modoPrevia = 'video';
+  $('som').remove();
   window.atualizarPrevia = async (c) => {
+    const mudouModelo = modeloAtual?.id !== c.modelo_dados.id;
     await montarVideo(c.modelo_dados, c.foto_url, c.ajuste, iniciaisCasal(c));
-    if (vd.paused) vd.play().catch(() => {});
     renderizar(c.modelo_dados, $('convite'), c, { modo: 'editor' });
+    if (mudouModelo) { modoPrevia = 'video'; mostrarAbertura(); vd.currentTime = 0; }
+    if (mostrandoAbertura && modoPrevia === 'video' && vd.paused && !vd.ended) vd.play().catch(() => {});
   };
   window.irPara = (onde) => {
-    if (onde === 'video') { scrollTo({ top: 0, behavior: 'smooth' }); vd.currentTime = 0; vd.play().catch(() => {}); }
-    else if (onde === 'foto') { scrollTo({ top: 0, behavior: 'smooth' }); vd.currentTime = modeloAtual.tipo === 'selo' ? 0 : Math.min(9.4, modeloAtual.inicio / modeloAtual.fps + 1.4); vd.play().catch(() => {}); }
-    else $('detalhes')?.scrollIntoView({ behavior: 'smooth' });
+    modoPrevia = onde;
+    if (onde === 'convite') return mostrarConvite();
+    if (!modeloAtual) return;
+    mostrarAbertura();
+    if (onde === 'foto') {
+      const tempo = modeloAtual.tipo === 'selo' ? 0 : modeloAtual.inicio / modeloAtual.fps + 1.4;
+      vd.pause();
+      vd.currentTime = Number.isFinite(vd.duration) ? Math.min(vd.duration - .05, tempo) : tempo;
+    } else {
+      vd.currentTime = 0;
+      vd.play().catch(() => {});
+    }
   };
   window.parent.postMessage({ tipo: 'previa-pronta' }, location.origin);
 } else {
@@ -86,13 +118,13 @@ if (embed) {
     $('abrir').querySelector('span').lastChild.textContent = 'Toque no selo para abrir';
     $('abrir').style.background = 'transparent';
     vd.addEventListener('loadeddata', () => { vd.currentTime = .01; }, { once: true });
-    vd.addEventListener('ended', () => setTimeout(() => $('detalhes')?.scrollIntoView({ behavior: 'smooth' }), 250));
+
   }
   $('abrir').onclick = () => {
     $('abrir').remove(); $('som').hidden = false;
     vd.muted = false; vd.play().catch(() => { vd.muted = true; vd.play(); });
   };
-  vd.addEventListener('ended', () => { $('descer').classList.add('ver'); if (musica && !vd.muted) musica.play().catch(() => {}); });
+  vd.addEventListener('ended', () => { if (musica && !vd.muted) musica.play().catch(() => {}); });
   $('som').onclick = () => { const mudo = !vd.muted; vd.muted = mudo; if (musica) musica.muted = mudo; $('ondas').style.display = mudo ? 'none' : ''; };
 }
 

@@ -11,22 +11,23 @@
 <link rel="stylesheet" href="/assets/css/casamento.css">
 <style>
 body{background:#1a0d20;margin:0}
-.palco{min-height:100svh;display:grid;place-items:center;position:relative;overflow:hidden}
+.palco{position:fixed;inset:0;z-index:10;display:grid;place-items:center;overflow:hidden;background:#1a0d20}
+.palco[hidden],#convite[hidden]{display:none!important}
+body.abertura{overflow:hidden}
+body.abertura #faixa{display:none}
 .palco .fundo{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(30px) brightness(.55);transform:scale(1.1)}
-.tela{position:relative;height:min(100svh,calc(100vw*16/9));aspect-ratio:9/16;max-width:100vw}
-.tela canvas{width:100%;height:100%;object-fit:cover}
-@media (max-width:599px){.tela{width:100vw;height:100svh;aspect-ratio:auto}}
-@media (min-width:600px){.tela{height:min(92svh,860px);border-radius:28px;overflow:hidden;box-shadow:0 40px 90px -30px #000}}
+.tela{position:relative;width:100%;height:100svh;overflow:hidden}
+.tela canvas{width:100%;height:100%;object-fit:contain;display:block}
 .abrir{position:absolute;inset:0;display:grid;place-items:end center;padding-bottom:16svh;border:0;background:linear-gradient(transparent 50%,rgba(26,13,32,.75));color:#fff;cursor:pointer;font:inherit}
 .abrir span{display:inline-flex;align-items:center;gap:.6em;font:700 1.25rem var(--disp);padding:.9em 1.6em;border-radius:999px;background:#fff;color:var(--tinta);animation:pulsa 1.8s ease-in-out infinite}
 @keyframes pulsa{50%{transform:scale(1.05)}}
-.som{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.9);cursor:pointer;display:grid;place-items:center}
+.som{position:fixed;z-index:20;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.9);cursor:pointer;display:grid;place-items:center}
 .descer{position:absolute;bottom:18px;left:50%;translate:-50% 0;color:#fff;text-decoration:none;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0;transition:opacity .6s}
 .descer.ver{opacity:1}
 .carregando{min-height:100svh;display:grid;place-items:center;color:#fff;text-align:center;padding:24px}
 /* dentro do editor (iframe): sem tela cheia */
-.embed .palco{min-height:0;height:auto}
-.embed .tela{width:100%;height:auto;aspect-ratio:9/16;border-radius:0;box-shadow:none}
+.embed .palco{position:fixed;inset:0;height:100svh}
+.embed .tela{width:100%;height:100svh;border-radius:0;box-shadow:none}
 .embed .palco .fundo{display:none}
 </style>
 </head>
@@ -35,20 +36,20 @@ body{background:#1a0d20;margin:0}
 
 <div id="app" hidden>
   <div id="faixa"></div>
-  <section class="palco">
+  <section class="palco" id="abertura" aria-label="Abertura do convite">
     <div class="fundo" id="fundo"></div>
     <div class="tela">
       <canvas id="cv"></canvas>
       <video id="vd" class="vid-oculto" playsinline crossorigin="anonymous" preload="auto"></video>
       <button class="abrir" id="abrir"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg>Toque para abrir</span></button>
-      <button class="som" id="som" aria-label="Ligar ou desligar o som" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26122E" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="ondas" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+
     </div>
-    <a class="descer" id="descer" href="#detalhes">Ver detalhes da festa<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
   </section>
 
-  <div id="convite"></div>
+      <button class="som" id="som" aria-label="Ligar ou desligar o som" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26122E" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="ondas" d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg></button>
+  <div id="convite" hidden></div>
 </div>
 
-<script type="module" src="/assets/js/convite.js"></script>
+<script type="module" src="/assets/js/convite.js?v=20261123-abertura"></script>
 </body>
 </html>

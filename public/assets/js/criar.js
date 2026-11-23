@@ -52,7 +52,7 @@ function atualizar(destino) {
       await iframe.contentWindow.atualizarPrevia(dadosPrevia());
       if (onde) iframe.contentWindow.irPara?.(onde);
     } catch {
-      mostrarErro('Não foi possível carregar a prévia. Tente outra abertura ou atualize a página.');
+      mostrarErro('Não foi possível carregar a prévia. Tente outra abertura ou atualize a página.', false);
     }
   }, 120);
 }
@@ -282,7 +282,7 @@ const total = () => especial ? especial.valor_centavos : (ehCasamento(modelo) ? 
 if (!existente) { document.querySelectorAll('[name=musica]').forEach(r => r.onchange = () => $('total').textContent = reais(total())); $('total').textContent = reais(total()); }
 aplicarModo();
 
-function mostrarErro(t) { $('erro').textContent = t; $('erro').hidden = false; $('erro').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+function mostrarErro(t, rolar = true) { $('erro').textContent = t; $('erro').hidden = false; if (rolar) $('erro').scrollIntoView({ block: 'center', behavior: 'smooth' }); }
 
 // ---------- enviar ----------
 $('form').onsubmit = async e => {
