@@ -39,7 +39,7 @@
 </style>
 </head>
 <body>
-<header class="topo"><div class="cont"><a class="marca" href="/">ns<b>.</b>convites</a><nav><a href="/#modelos">Ver modelos</a></nav></div></header>
+<header class="topo"><div class="cont"><a class="marca" href="/">ns<b>.</b>convites</a><nav><a href="/#modelos">Ver modelos</a><a href="/conta">Meus convites</a></nav></div></header>
 
 <main class="cont">
 <div class="criar" id="criar">
@@ -99,11 +99,11 @@
 
     <div class="bloco">
       <h2>Seus dados</h2>
-      <p style="color:var(--tinta-2);margin:-8px 0 18px;font-size:.95rem">Para enviar o link do convite e o acesso às confirmações.</p>
+      
       <div class="campo"><label for="cliente">Seu nome</label><input id="cliente" name="cliente" autocomplete="name" required></div>
       <div class="duas">
         <div class="campo"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" required></div>
-        <div class="campo"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email"></div>
+        <div class="campo"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" required><span class="ajuda">O link do convite chega aqui, e é com ele que você entra em Meus convites.</span></div>
       </div>
     </div>
 
@@ -115,11 +115,6 @@
   </form>
 </div>
 
-<div class="pronto" id="pronto" hidden>
-  <h1 style="font-size:2.6rem">Pedido recebido</h1>
-  <p id="prontoTexto">Assim que o pagamento for confirmado, o link do convite chega no seu WhatsApp.</p>
-  <a class="bt bt-festa" id="prontoLink" href="#">Abrir convite</a>
-</div>
 </main>
 
 <script type="module" src="/assets/js/criar.js"></script>

@@ -1,5 +1,6 @@
-SUPABASE_URL=https://SEU-PROJETO.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=coloque-a-service-role-aqui
+SEGREDO=troque-por-um-texto-longo-e-aleatorio
 ADMIN_SENHA=troque-esta-senha
+RESEND_API_KEY=
 WEBHOOK_SECRET=um-segredo-qualquer
 LIBERAR_SEM_PAGAMENTO=1
+SITE_URL=http://localhost:8788

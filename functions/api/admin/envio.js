@@ -1,4 +1,4 @@
-import { json, aleatorio } from '../../_lib/sb.js';
+import { json, aleatorio } from '../../_lib/util.js';
 import { salvarArquivo, urlArquivo } from '../../_lib/arquivos.js';
 
 const TIPOS = { 'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm' };

@@ -55,21 +55,29 @@ async function carregarPedidos() {
   ps.forEach(p => {
     const urlConvite = `${location.origin}/c/${p.slug}`, urlPainel = `${location.origin}/painel?c=${p.slug}&k=${p.token_painel}`;
     const sel = el('select', { 'aria-label': 'Status' }, ...['aguardando_pagamento', 'pago', 'publicado', 'cancelado'].map(s => new Option(NOMES_ST[s], s, false, s === p.status)));
-    sel.onchange = async () => { await api('pedidos', { metodo: 'PATCH', corpo: { id: p.id, status: sel.value } }); avisar('Status atualizado.'); carregarPedidos(); };
+    sel.onchange = async () => {
+      if (sel.value === 'pago' && !confirm(`Marcar como pago? O cliente recebe o link por e-mail (${p.cliente_email}).`)) { sel.value = p.status; return; }
+      await api('pedidos', { metodo: 'PATCH', corpo: { id: p.id, status: sel.value } }); avisar(sel.value === 'pago' ? 'Marcado como pago. E-mail enviado.' : 'Status atualizado.'); carregarPedidos();
+    };
     const msg = `Olá, ${p.cliente_nome}! Seu convite está pronto:\n${urlConvite}\n\nPara ver quem confirmou presença:\n${urlPainel}`;
     const acoes = el('div', { className: 'acoes' },
       el('a', { className: 'chip', href: urlConvite, target: '_blank', textContent: 'Abrir convite' }),
       el('a', { className: 'chip', href: urlPainel, target: '_blank', textContent: 'Confirmações' }),
-      el('a', { className: 'chip', href: zapLink(p.cliente_whatsapp, msg), target: '_blank', textContent: 'Mandar link no WhatsApp' }));
+      el('a', { className: 'chip', href: zapLink(p.cliente_whatsapp, msg), target: '_blank', textContent: 'Chamar no WhatsApp' }));
+    if (p.status === 'pago' || p.status === 'publicado') {
+      const re = el('button', { className: 'chip', textContent: p.email_enviado_em ? 'Reenviar e-mail' : 'Enviar e-mail' });
+      re.onclick = async () => { try { await api('pedidos', { metodo: 'PATCH', corpo: { id: p.id, reenviarEmail: true } }); avisar(`E-mail enviado para ${p.cliente_email}.`); } catch (err) { avisar(err.message); } };
+      acoes.append(re);
+    }
     if (p.musica === 'personalizada') {
-      const inp = el('input', { placeholder: 'Link do MP3 da música', 'aria-label': 'Link da música personalizada' });
+      const inp = el('input', { placeholder: 'Link do MP3 da música', 'aria-label': 'Link da música personalizada', value: p.musica_url || '' });
       const bt = el('button', { className: 'chip', textContent: 'Salvar música' });
-      bt.onclick = async () => { await api('pedidos', { metodo: 'PATCH', corpo: { id: p.id, status: p.status, musica_url: inp.value.trim() } }); avisar('Música salva no convite.'); };
+      bt.onclick = async () => { await api('pedidos', { metodo: 'PATCH', corpo: { id: p.id, musica_url: inp.value.trim() } }); avisar('Música salva no convite.'); };
       acoes.append(inp, bt);
     }
     lista.append(el('div', { className: 'item-adm' },
       el('div', {}, el('h3', { textContent: `${p.homenageado}${p.tipo === 'especial' ? ' · especial' : ''}` }),
-        el('div', { className: 'meta', textContent: `${p.cliente_nome} · festa ${dataBR(p.data)} · pedido ${dataBR(p.criado_em)}${p.musica === 'personalizada' ? ' · com música personalizada' : ''}` })),
+        el('div', { className: 'meta', textContent: `${p.cliente_nome} · ${p.cliente_email} · festa ${dataBR(p.data)} · pedido ${dataBR(p.criado_em)}${p.musica === 'personalizada' ? ' · com música personalizada' : ''}` })),
       el('div', { style: 'display:flex;gap:10px;align-items:center' }, el('span', { className: 'valor-adm', textContent: reais(p.valor_centavos) }), sel),
       acoes));
   });
@@ -85,7 +93,7 @@ $('cancelarEspecial').onclick = () => { $('formEspecial').hidden = true; $('form
 $('formEspecial').onsubmit = async e => {
   e.preventDefault(); $('erroEspecial').hidden = true;
   try {
-    await api('especiais', { metodo: 'POST', corpo: { cliente_nome: $('espCliente').value, cliente_whatsapp: $('espZap').value, descricao: $('espDesc').value, valor: $('espValor').value, modelo_id: $('espModelo').value, observacoes: $('espObs').value } });
+    await api('especiais', { metodo: 'POST', corpo: { cliente_nome: $('espCliente').value, cliente_whatsapp: $('espZap').value, cliente_email: $('espEmail').value, descricao: $('espDesc').value, valor: $('espValor').value, modelo_id: $('espModelo').value, observacoes: $('espObs').value } });
     $('formEspecial').reset(); $('formEspecial').hidden = true; avisar('Pedido especial criado. Agora é só mandar o link.'); carregarEspeciais();
   } catch (err) { $('erroEspecial').textContent = err.message; $('erroEspecial').hidden = false; }
 };

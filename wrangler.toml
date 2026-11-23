@@ -2,18 +2,33 @@ name = "ns-convites"
 pages_build_output_dir = "public"
 compatibility_date = "2026-11-01"
 
-# Fotos dos clientes e vídeos dos modelos ficam neste bucket do R2.
-# Crie com:  npx wrangler r2 bucket create ns-convites
+# Banco de dados (pedidos, clientes, modelos...). Crie com:
+#   npx wrangler d1 create ns-convites
+# e cole o database_id que aparecer abaixo. Depois aplique as tabelas:
+#   npx wrangler d1 migrations apply ns-convites --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "ns-convites"
+database_id = "COLE-AQUI-O-ID-DO-D1"
+migrations_dir = "migrations"
+
+# Fotos dos clientes e vídeos dos modelos. Crie com:
+#   npx wrangler r2 bucket create ns-convites
 [[r2_buckets]]
 binding = "ARQUIVOS"
 bucket_name = "ns-convites"
 
-# Segredos (não coloque aqui): configure no painel da Cloudflare ou com
-#   npx wrangler pages secret put SUPABASE_SERVICE_ROLE_KEY
-#   npx wrangler pages secret put WEBHOOK_SECRET
-#   npx wrangler pages secret put ADMIN_SENHA
 [vars]
-SUPABASE_URL = "https://SEU-PROJETO.supabase.co"
 LIBERAR_SEM_PAGAMENTO = "0"
-# Opcional: domínio próprio ligado ao bucket (ex.: https://arquivos.seudominio.com.br)
+# Remetente dos e-mails (domínio verificado no Resend)
+EMAIL_REMETENTE = "NS Convites <convites@SEU-DOMINIO.com.br>"
+# Endereço público do site, usado nos links dos e-mails
+SITE_URL = "https://SEU-DOMINIO.com.br"
+# Opcional: domínio próprio ligado ao bucket R2 (ex.: https://arquivos.seudominio.com.br)
 # ARQUIVOS_URL = ""
+
+# Segredos (não coloque aqui). Configure no painel da Cloudflare ou com:
+#   npx wrangler pages secret put SEGREDO          (texto longo e aleatório, assina os logins)
+#   npx wrangler pages secret put ADMIN_SENHA
+#   npx wrangler pages secret put RESEND_API_KEY
+#   npx wrangler pages secret put WEBHOOK_SECRET

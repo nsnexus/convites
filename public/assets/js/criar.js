@@ -72,6 +72,7 @@ if (especial) {
   $('blocoMusica').hidden = true;
   if (especial.cliente_nome) $('cliente').value = especial.cliente_nome;
   if (especial.cliente_whatsapp) $('whatsapp').value = especial.cliente_whatsapp;
+  if (especial.cliente_email) $('email').value = especial.cliente_email;
 }
 const total = () => especial ? especial.valor_centavos : CONFIG.precoConvite + (document.querySelector('[name=musica]:checked').value === 'personalizada' ? CONFIG.precoMusica : 0);
 document.querySelectorAll('[name=musica]').forEach(r => r.onchange = () => $('total').textContent = reais(total()));
@@ -86,6 +87,7 @@ $('form').onsubmit = async e => {
   if (falta) { falta.focus(); return mostrarErro(`Preencha o campo "${f.querySelector(`label[for=${falta.id}]`).textContent}".`); }
   if (!arquivoFoto) return mostrarErro('Escolha a foto que vai aparecer na moldura.');
   if ($('whatsapp').value.replace(/\D/g, '').length < 10) { $('whatsapp').focus(); return mostrarErro('Confira o número de WhatsApp com DDD.'); }
+  if (!$('email').checkValidity()) { $('email').focus(); return mostrarErro('Confira o e-mail. É nele que o link do convite chega.'); }
 
   const fd = new FormData(f);
   fd.set('modelo', modelo.id);
@@ -98,9 +100,8 @@ $('form').onsubmit = async e => {
     const j = await r.json();
     if (!r.ok) throw new Error(j.erro || 'Não foi possível salvar o pedido.');
     sessionStorage.removeItem('fotoTeste');
-    if (CONFIG.checkoutUrl) { location.href = CONFIG.checkoutUrl + encodeURIComponent(j.id); return; }
-    $('criar').hidden = true; $('pronto').hidden = false; scrollTo(0, 0);
-    $('prontoLink').href = `/c/${j.slug}`;
+    // checkout: o gateway deve voltar para /obrigado?pedido=<id>
+    location.href = CONFIG.checkoutUrl ? CONFIG.checkoutUrl + encodeURIComponent(j.id) : `/obrigado?pedido=${j.id}`;
   } catch (err) {
     mostrarErro(err.message + ' Tente de novo em instantes.');
     $('enviar').disabled = false; $('enviar').textContent = 'Ir para o pagamento';
