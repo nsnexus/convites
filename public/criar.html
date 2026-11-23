@@ -6,7 +6,7 @@
 <title>Monte seu convite | NS Convites</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261123-campos">
 <style>
 .criar{display:grid;grid-template-columns:360px 1fr;gap:56px;padding:28px 0 0;align-items:start}
 .lado{position:sticky;top:84px}
@@ -43,6 +43,15 @@ input[type=range]{accent-color:var(--festa)}
 .cor-campo input[type=color]{width:52px;height:40px;border:1.5px solid var(--linha);border-radius:10px;padding:2px;background:#fff;cursor:pointer}
 .mini-bt{font:600 .82rem var(--corpo);border:0;background:none;color:var(--festa-esc);cursor:pointer;padding:4px}
 .cor-campo select{font:inherit;padding:.55em .8em;border-radius:10px;border:1.5px solid var(--linha);background:#fff}
+.fonte-campo{width:100%}
+.fonte-campo details{border:1.5px solid var(--linha);border-radius:14px;background:#fff;overflow:hidden}
+.fonte-campo summary{padding:14px 16px;cursor:pointer;font-size:1.5rem}
+.fontes-opcoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;padding:8px 12px 12px;max-height:360px;overflow:auto}
+.fonte-opcao{border:1.5px solid var(--linha);border-radius:12px;background:#fff;padding:12px;text-align:left;cursor:pointer;color:var(--tinta)}
+.fonte-opcao[aria-pressed=true]{border-color:var(--festa);background:var(--papel)}
+.fonte-opcao:focus-visible{outline:3px solid var(--festa);outline-offset:2px}
+.fonte-opcao small{display:block;font:500 .78rem var(--corpo);margin-bottom:6px;color:var(--tinta-2)}
+.fonte-opcao span{display:block;font-size:1.65rem;line-height:1.5;overflow-wrap:anywhere}
 /* blocos */
 .blocos{display:grid;gap:10px}
 .bloco-op{background:#fff;border-radius:16px;border:1.5px solid var(--linha)}
@@ -92,7 +101,7 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
   <aside class="lado" id="lado">
     <button class="fechar-fone" id="fecharFone" aria-label="Fechar prévia">×</button>
     <div>
-      <div class="fone"><iframe id="previa" src="/convite?embed=1" title="Prévia do convite"></iframe></div>
+      <div class="fone"><iframe id="previa" src="/convite?embed=1" title="Prévia do convite" allow="autoplay"></iframe></div>
       <div class="ir"><button type="button" data-ir="video">Abertura</button><button type="button" data-ir="foto">Foto na moldura</button><button type="button" data-ir="convite">Convite</button></div>
     </div>
   </aside>
@@ -105,10 +114,10 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
     <section class="etapa">
       <h2><span>1</span>Abertura e foto</h2>
       <p class="dica so-festa">O vídeo abre o convite e termina com a foto na moldura.</p>
-      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo"><label for="modelo">Vídeo de abertura</label><select id="modelo"></select></div></div>
+      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo"><label for="modelo">Abertura</label><select id="modelo"></select></div></div>
       <div class="so-festa">
       <label class="bt bt-linha" id="btFoto" style="width:max-content;cursor:pointer">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
-      <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado.</p>
+      <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado. A foto será enviada ao salvar o convite.</p>
       <div class="ajustes" id="ajustes" hidden>
         <label>Aproximar<input type="range" id="zoom" min="1" max="2.5" step=".01" value="1"></label>
         <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
@@ -150,7 +159,10 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
       <div class="cores-linha">
         <div class="cor-campo">Cor principal<div class="linha"><input type="color" id="corDestaque"><button type="button" class="mini-bt" data-reset="destaque">Usar a do estilo</button></div></div>
         <div class="cor-campo">Cor de fundo<div class="linha"><input type="color" id="corFundo"><button type="button" class="mini-bt" data-reset="fundo">Usar a do estilo</button></div></div>
-        <div class="cor-campo"><label for="fonte">Fonte do título</label><select id="fonte"></select></div>
+        <div class="cor-campo fonte-campo"><span id="rotFonte">Fonte do título</span><select id="fonte" hidden aria-hidden="true" tabindex="-1"></select>
+          <details id="fontesMenu"><summary aria-labelledby="rotFonte fonteAtual"><span id="fonteAtual">Padrão do estilo</span></summary>
+            <div id="fontesOpcoes" class="fontes-opcoes" role="group" aria-label="Escolher fonte do título"></div>
+          </details></div>
       </div>
     </section>
 
@@ -217,6 +229,6 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
   </form>
 </div>
 </main>
-<script type="module" src="/assets/js/criar.js"></script>
+<script type="module" src="/assets/js/criar.js?v=20261123-previa"></script>
 </body>
 </html>

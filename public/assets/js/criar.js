@@ -34,12 +34,27 @@ if (!existente && fotoSrc) arquivoFoto = await (await fetch(fotoSrc)).blob();
 
 // ---------- prévia (iframe) ----------
 const iframe = $('previa');
-let previaPronta = false, agendado;
-window.addEventListener('message', e => { if (e.origin === location.origin && e.data?.tipo === 'previa-pronta') { previaPronta = true; atualizar(); } });
-iframe.addEventListener('load', () => { if (iframe.contentWindow.atualizarPrevia) { previaPronta = true; atualizar(); } });
-function atualizar() {
+let previaPronta = false, agendado, destinoPrevia;
+function conectarPrevia() {
+  previaPronta = typeof iframe.contentWindow?.atualizarPrevia === 'function';
+  if (previaPronta) atualizar();
+}
+window.addEventListener('message', e => { if (e.source === iframe.contentWindow && e.origin === location.origin && e.data?.tipo === 'previa-pronta') conectarPrevia(); });
+iframe.addEventListener('load', conectarPrevia);
+function atualizar(destino) {
+  if (destino) destinoPrevia = destino;
   clearTimeout(agendado);
-  agendado = setTimeout(() => { if (previaPronta) iframe.contentWindow.atualizarPrevia?.(dadosPrevia()); }, 120);
+  agendado = setTimeout(async () => {
+    if (!previaPronta) return;
+    const onde = destinoPrevia;
+    destinoPrevia = null;
+    try {
+      await iframe.contentWindow.atualizarPrevia(dadosPrevia());
+      if (onde) iframe.contentWindow.irPara?.(onde);
+    } catch {
+      mostrarErro('Não foi possível carregar a prévia. Tente outra abertura ou atualize a página.');
+    }
+  }, 120);
 }
 function dadosPrevia() {
   const v = id => $(id).value.trim();
@@ -88,7 +103,7 @@ $('modelo').onchange = e => {
   if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   // se o cliente ainda não mexeu no estilo, acompanha a categoria do vídeo
   if (pers.estilo === personalizacaoPadrao(modelo.categoria).estilo) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
-  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); atualizar(); iframe.contentWindow.irPara?.('video');
+  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); atualizar('video');
 };
 if (existente) { $('btFoto').hidden = true; $('fotoInfo').textContent = 'A foto não pode ser trocada depois do pedido, mas você pode ajustar o enquadramento.'; $('ajustes').hidden = false; }
 else if (fotoSrc) { $('ajustes').hidden = false; $('fotoInfo').textContent = 'Usando a foto que você testou na página inicial.'; }
@@ -96,14 +111,25 @@ $('zoom').value = ajuste.zoom; $('px').value = ajuste.x; $('py').value = ajuste.
 $('foto').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   if (!f.type.startsWith('image/')) return mostrarErro('Escolha um arquivo de imagem (JPG ou PNG).');
-  const im = new Image(); im.src = URL.createObjectURL(f); await im.decode();
-  const s = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
-  c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s);
-  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-  arquivoFoto = await new Promise(ok => c.toBlob(ok, 'image/jpeg', .88));
-  fotoSrc = URL.createObjectURL(arquivoFoto);
-  $('ajustes').hidden = false; $('fotoInfo').textContent = 'Ajuste o enquadramento se precisar.';
-  atualizar(); setTimeout(() => iframe.contentWindow.irPara?.('foto'), 300);
+  const entrada = URL.createObjectURL(f);
+  $('fotoInfo').textContent = 'Preparando foto…';
+  try {
+    const im = new Image(); im.src = entrada; await im.decode();
+    const s = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+    c.width = Math.round(im.naturalWidth * s); c.height = Math.round(im.naturalHeight * s);
+    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+    const nova = await new Promise(ok => c.toBlob(ok, 'image/jpeg', .88));
+    if (!nova) throw new Error('foto');
+    if (fotoSrc?.startsWith('blob:')) URL.revokeObjectURL(fotoSrc);
+    arquivoFoto = nova; fotoSrc = URL.createObjectURL(nova);
+    $('erro').hidden = true;
+    $('ajustes').hidden = false;
+    $('fotoInfo').textContent = 'Foto pronta para a prévia. Ela será enviada ao clicar em “Ver convite pronto”.';
+    atualizar('foto');
+  } catch {
+    $('fotoInfo').textContent = arquivoFoto ? 'A foto anterior foi mantida.' : 'A foto não foi carregada.';
+    mostrarErro('Não foi possível abrir essa foto. Tente uma imagem JPG, PNG ou WebP.');
+  } finally { URL.revokeObjectURL(entrada); e.target.value = ''; }
 };
 ['zoom', 'px', 'py'].forEach(id => $(id).oninput = () => { ajuste = { zoom: +$('zoom').value, x: +$('px').value, y: +$('py').value }; atualizar(); });
 ['zoom', 'px', 'py'].forEach(id => $(id).onchange = () => iframe.contentWindow.irPara?.('foto'));
@@ -142,8 +168,28 @@ function pintarEstilos() {
   $('corDestaque').value = pers.cores.destaque || e.cores.destaque;
   $('corFundo').value = pers.cores.fundo || e.cores.fundo;
   $('fonte').value = pers.fonte;
+  pintarFontes();
 }
 $('fonte').append(new Option('Padrão do estilo', ''), ...Object.entries(FONTES).map(([k, f]) => new Option(f.nome, k)));
+function pintarFontes() {
+  const base = FONTES[estiloPorId(pers.estilo).titulo];
+  const atual = FONTES[pers.fonte] || base;
+  $('fonteAtual').textContent = pers.fonte ? atual.nome : 'Padrão do estilo';
+  $('fonteAtual').style.fontFamily = atual.css;
+  const box = $('fontesOpcoes'); box.textContent = '';
+  const exemplo = ehCasamento(modelo) ? ([$('nome1').value.trim(), $('nome2').value.trim()].filter(Boolean).join(' & ') || 'Laura & Rafael') : ($('homenageado').value.trim() || 'Seu convite');
+  for (const [chave, fonte] of [['', { ...base, nome: 'Padrão do estilo' }], ...Object.entries(FONTES)]) {
+    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'fonte-opcao';
+    bt.setAttribute('aria-pressed', String(chave === pers.fonte));
+    const nome = document.createElement('small'); nome.textContent = fonte.nome;
+    const amostra = document.createElement('span'); amostra.textContent = exemplo; amostra.style.fontFamily = fonte.css;
+    bt.append(nome, amostra);
+    bt.onclick = () => { pers.fonte = chave; $('fonte').value = chave; pintarFontes(); atualizar('convite'); $('fontesMenu').open = false; $('fontesMenu').querySelector('summary').focus(); };
+    box.append(bt);
+  }
+}
+$('fontesMenu').addEventListener('toggle', () => { if ($('fontesMenu').open) pintarFontes(); });
+
 $('corDestaque').oninput = e => { pers.cores.destaque = e.target.value; atualizar(); };
 $('corFundo').oninput = e => { pers.cores.fundo = e.target.value; atualizar(); };
 $('fonte').onchange = e => { pers.fonte = e.target.value; atualizar(); };
@@ -289,4 +335,5 @@ function mesclar(base, p) {
   for (const [k, v] of Object.entries(p.blocos || {})) out.blocos[k] = typeof v === 'object' && v && !Array.isArray(v) ? { ...base.blocos[k], ...v } : v;
   return out;
 }
+conectarPrevia();
 atualizar();
