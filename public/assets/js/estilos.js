@@ -10,6 +10,17 @@ export const ESTILOS = [
   { id: 'hq',        nome: 'Quadrinhos',    cores: { fundo: '#ffe14d', texto: '#141414', destaque: '#e6232a' }, titulo: 'bangers',   corpo: 'Comic Neue' },
   { id: 'aquarela',  nome: 'Aquarela',      cores: { fundo: '#f7f1fb', texto: '#3b3355', destaque: '#8c7ae6' }, titulo: 'dancing',   corpo: 'Quicksand' },
   { id: 'rustico',   nome: 'Rústico',       cores: { fundo: '#ecdcc6', texto: '#3e2c1c', destaque: '#8b5e34' }, titulo: 'amatic',    corpo: 'Josefin Sans' },
+  // Minimalistas
+  { id: 'linho',     nome: 'Linho',         grupo: 'min', cores: { fundo: '#f6f4ef', texto: '#2a2a28', destaque: '#8a8578' }, titulo: 'cormorant', corpo: 'Manrope' },
+  { id: 'mono',      nome: 'Monocromático', grupo: 'min', cores: { fundo: '#121212', texto: '#f2f2f2', destaque: '#f2f2f2' }, titulo: 'montserrat', corpo: 'Manrope' },
+  { id: 'areia',     nome: 'Areia',         grupo: 'min', cores: { fundo: '#efe6da', texto: '#4a3f35', destaque: '#a87c5f' }, titulo: 'cormorant', corpo: 'Karla' },
+  { id: 'salvia',    nome: 'Sálvia',        grupo: 'min', cores: { fundo: '#e9eee6', texto: '#2f3b32', destaque: '#6f8a69' }, titulo: 'playfair',  corpo: 'Karla' },
+  { id: 'sereno',    nome: 'Sereno',        grupo: 'min', cores: { fundo: '#eef2f6', texto: '#1f2a37', destaque: '#4f6f8f' }, titulo: 'montserrat', corpo: 'Manrope' },
+  { id: 'rose',      nome: 'Rosé',          grupo: 'min', cores: { fundo: '#f8efed', texto: '#4b3436', destaque: '#c0807b' }, titulo: 'cormorant', corpo: 'Nunito' },
+  { id: 'grafite',   nome: 'Grafite',       grupo: 'min', cores: { fundo: '#f2f2f0', texto: '#1e1e1e', destaque: '#e2b93b' }, titulo: 'montserrat', corpo: 'Manrope' },
+  { id: 'oliva',     nome: 'Oliva',         grupo: 'min', cores: { fundo: '#f4f1e8', texto: '#3a3a2a', destaque: '#6b6b3a' }, titulo: 'playfair',  corpo: 'Karla' },
+  { id: 'lavanda',   nome: 'Lavanda',       grupo: 'min', cores: { fundo: '#f3f0f8', texto: '#352f45', destaque: '#8a78c2' }, titulo: 'fredoka',   corpo: 'Nunito' },
+  { id: 'noite',     nome: 'Noite',         grupo: 'min', cores: { fundo: '#14182b', texto: '#e9ecf5', destaque: '#c9b37e' }, titulo: 'cormorant', corpo: 'Manrope' },
 ];
 
 // Fontes de título que o cliente pode escolher
@@ -40,6 +51,9 @@ function mistura(a, b, t) {
   return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, '0')).join('');
 }
 const luz = h => { const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255); return .2126 * r + .7152 * g + .0722 * b; };
+// luminância relativa (WCAG) e qual texto contrasta mais sobre uma cor
+const lumRel = h => { const v = [1, 3, 5].map(i => { const c = parseInt(h.slice(i, i + 2), 16) / 255; return c <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; }); return .2126 * v[0] + .7152 * v[1] + .0722 * v[2]; };
+const textoSobre = h => { const L = lumRel(h); return (1.05 / (L + .05)) >= ((L + .05) / (lumRel('#141414') + .05)) ? '#ffffff' : '#141414'; };
 
 // Aplica estilo + ajustes do cliente num elemento (variáveis CSS) e carrega as fontes
 export function aplicarEstilo(el, pers = {}) {
@@ -54,7 +68,7 @@ export function aplicarEstilo(el, pers = {}) {
     '--fundo': fundo, '--texto': texto, '--destaque': destaque,
     '--texto-2': mistura(texto, fundo, .35), '--linha': mistura(texto, fundo, .82),
     '--cartao': luz(fundo) > .5 ? mistura(fundo, '#ffffff', .65) : mistura(fundo, '#ffffff', .07),
-    '--sobre-destaque': luz(destaque) > .55 ? '#141414' : '#ffffff',
+    '--sobre-destaque': textoSobre(destaque),
     '--destaque-suave': mistura(destaque, fundo, .82),
     '--f-titulo': fonteT.css, '--f-corpo': `'${e.corpo}', system-ui, sans-serif`,
   };

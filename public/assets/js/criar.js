@@ -98,7 +98,10 @@ if (existente) {
 carregarFontes(Object.values(FONTES).map(f => f.google));
 function pintarEstilos() {
   const box = $('estilos'); box.textContent = '';
+  let grupoAtual;
   ESTILOS.forEach(e => {
+    const g = e.grupo || 'tema';
+    if (g !== grupoAtual) { grupoAtual = g; const t = document.createElement('p'); t.className = 'grupo-estilos'; t.textContent = g === 'min' ? 'Minimalistas' : 'Temáticos'; box.append(t); }
     const b = document.createElement('button'); b.type = 'button'; b.className = 'estilo'; b.setAttribute('aria-pressed', e.id === pers.estilo);
     b.innerHTML = `<span class="amostra" aria-hidden="true">Aa<i></i></span><span class="nome"></span>`;
     const a = b.querySelector('.amostra'); a.style.background = e.cores.fundo; a.style.color = e.cores.texto; a.style.fontFamily = FONTES[e.titulo].css;

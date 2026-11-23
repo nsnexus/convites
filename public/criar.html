@@ -30,6 +30,8 @@
 input[type=range]{accent-color:var(--festa)}
 /* estilos */
 .estilos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.grupo-estilos{grid-column:1/-1;font-weight:700;font-size:.9rem;color:var(--tinta-2);margin:8px 0 -2px}
+.grupo-estilos:first-child{margin-top:0}
 .estilo{border:2px solid transparent;border-radius:16px;padding:0;cursor:pointer;background:none;font:inherit;text-align:left;overflow:hidden;box-shadow:0 0 0 1px var(--linha)}
 .estilo[aria-pressed=true]{border-color:var(--festa);box-shadow:none}
 .estilo .amostra{height:84px;display:grid;place-items:center;font-size:2rem;position:relative}

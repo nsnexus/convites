@@ -1,5 +1,6 @@
 // Valida e normaliza a personalização do convite (estilo, cores, fontes e blocos).
-export const ESTILOS = ['classico', 'princesa', 'jardim', 'minimal', 'neon', 'ingresso', 'esportivo', 'hq', 'aquarela', 'rustico'];
+export const ESTILOS = ['classico', 'princesa', 'jardim', 'minimal', 'neon', 'ingresso', 'esportivo', 'hq', 'aquarela', 'rustico',
+  'linho', 'mono', 'areia', 'salvia', 'sereno', 'rose', 'grafite', 'oliva', 'lavanda', 'noite'];
 export const FONTES = ['', 'cormorant', 'playfair', 'dancing', 'bebas', 'bangers', 'unbounded', 'fredoka', 'amatic', 'pacifico', 'montserrat'];
 
 const cor = (v) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v).toLowerCase() : '');
