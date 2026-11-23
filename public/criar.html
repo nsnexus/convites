@@ -3,120 +3,194 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Criar convite | NS Convites</title>
+<title>Monte seu convite | NS Convites</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/site.css">
 <style>
-.criar{display:grid;grid-template-columns:380px 1fr;gap:64px;padding:32px 0 96px;align-items:start}
-.criar .lado{position:sticky;top:88px}
-.criar .celular{width:min(320px,78vw)}
-.criar h1{font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:8px}
-.bloco{padding:28px 0;border-top:1px solid var(--linha)}
-.bloco h2{font-size:1.5rem;margin-bottom:18px}
-.modelo-atual{display:flex;gap:14px;align-items:center}
-.modelo-atual img{width:56px;height:100px;object-fit:cover;border-radius:10px}
-.modelo-atual select{flex:1}
-.envio{display:flex;flex-direction:column;align-items:flex-start;gap:16px}
-.envio label.bt{cursor:pointer}
-.ajustes{display:grid;gap:10px;width:100%;max-width:420px}
+.criar{display:grid;grid-template-columns:360px 1fr;gap:56px;padding:28px 0 0;align-items:start}
+.lado{position:sticky;top:84px}
+.fone{width:min(340px,84vw);aspect-ratio:9/18.5;margin:0 auto;border-radius:42px;background:var(--tinta);padding:10px;box-shadow:0 40px 80px -30px rgba(38,18,46,.55)}
+.fone iframe{width:100%;height:100%;border:0;border-radius:32px;background:#1a0d20;display:block}
+.ir{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.ir button{font:600 .85rem var(--corpo);border:0;background:var(--lilas);border-radius:999px;padding:.5em .95em;cursor:pointer}
+.ir button:hover{background:var(--linha)}
+.criar h1{font-size:clamp(2.2rem,5vw,3.2rem);margin-bottom:6px}
+.sub-h{color:var(--tinta-2)}
+.etapa{padding:30px 0;border-top:1px solid var(--linha)}
+.etapa:first-of-type{border-top:0}
+.etapa>h2{font-size:1.5rem;margin-bottom:4px;display:flex;gap:12px;align-items:baseline}
+.etapa>h2 span{font:800 1rem var(--disp);color:var(--festa)}
+.etapa>p.dica{color:var(--tinta-2);font-size:.94rem;margin-bottom:18px}
+.modelo-atual{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.modelo-atual img{width:56px;height:100px;object-fit:cover;border-radius:10px;background:var(--lilas)}
+.modelo-atual .campo{flex:1;margin:0}
+.ajustes{display:grid;gap:10px;max-width:420px;margin-top:14px}
 .ajustes label{display:grid;grid-template-columns:90px 1fr;align-items:center;font-size:.92rem;font-weight:500}
-
+input[type=range]{accent-color:var(--festa)}
+/* estilos */
+.estilos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
+.estilo{border:2px solid transparent;border-radius:16px;padding:0;cursor:pointer;background:none;font:inherit;text-align:left;overflow:hidden;box-shadow:0 0 0 1px var(--linha)}
+.estilo[aria-pressed=true]{border-color:var(--festa);box-shadow:none}
+.estilo .amostra{height:84px;display:grid;place-items:center;font-size:2rem;position:relative}
+.estilo .amostra i{position:absolute;left:10px;right:10px;bottom:10px;height:6px;border-radius:3px}
+.estilo .nome{display:block;padding:8px 10px;font-weight:600;font-size:.9rem;background:#fff}
+.cores-linha{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;align-items:end}
+.cor-campo{display:grid;gap:6px;font-weight:600;font-size:.92rem}
+.cor-campo .linha{display:flex;gap:8px;align-items:center}
+.cor-campo input[type=color]{width:52px;height:40px;border:1.5px solid var(--linha);border-radius:10px;padding:2px;background:#fff;cursor:pointer}
+.mini-bt{font:600 .82rem var(--corpo);border:0;background:none;color:var(--festa-esc);cursor:pointer;padding:4px}
+.cor-campo select{font:inherit;padding:.55em .8em;border-radius:10px;border:1.5px solid var(--linha);background:#fff}
+/* blocos */
+.blocos{display:grid;gap:10px}
+.bloco-op{background:#fff;border-radius:16px;border:1.5px solid var(--linha)}
+.bloco-op:has(.liga:checked){border-color:var(--festa)}
+.bloco-op>label{display:flex;gap:14px;align-items:center;padding:14px 16px;cursor:pointer}
+.bloco-op>label input{width:20px;height:20px;accent-color:var(--festa);flex:none}
+.bloco-op>label strong{display:block}
+.bloco-op>label span{color:var(--tinta-2);font-size:.88rem}
+.bloco-op .campos{padding:0 16px 16px 50px;display:grid;gap:12px}
+.bloco-op:not(:has(.liga:checked)) .campos{display:none}
+.bloco-op .campo{margin:0}
+.prog-item{display:grid;grid-template-columns:110px 1fr 36px;gap:8px}
+.prog-item input,.blocos input:not([type=checkbox]):not([type=color]),.blocos textarea{font:inherit;padding:.65em .8em;border-radius:10px;border:1.5px solid var(--linha);background:#fff;width:100%}
+.x{border:0;background:var(--lilas);border-radius:10px;cursor:pointer;font-size:1.1rem}
+.cores-traje{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cores-traje input[type=color]{width:42px;height:42px;border:1.5px solid var(--linha);border-radius:50%;padding:2px;background:#fff}
+.check{display:flex;gap:10px;align-items:center;font-size:.95rem;cursor:pointer}
+.check input{accent-color:var(--festa);width:18px;height:18px}
 .opcao{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:var(--raio-p);border:1.5px solid var(--linha);background:#fff;cursor:pointer}
 .opcao:has(input:checked){border-color:var(--festa)}
 .opcao input{margin-top:5px;accent-color:var(--festa);width:18px;height:18px}
 .opcao span{display:block;color:var(--tinta-2);font-size:.9rem}
-.resumo{position:sticky;bottom:0;background:var(--papel);padding:18px 0;border-top:1px solid var(--linha);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.resumo .total{font:800 1.8rem var(--disp)}
+.resumo{position:sticky;bottom:0;background:var(--papel);padding:16px 0;border-top:1px solid var(--linha);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:10px;z-index:5}
+.resumo .total{font:800 1.7rem var(--disp)}
 .resumo small{display:block;color:var(--tinta-2)}
-.especial{background:var(--tinta);color:#fff;border-radius:20px;padding:18px 20px;margin:20px 0 8px}
+.especial{background:var(--tinta);color:#fff;border-radius:20px;padding:18px 20px;margin:18px 0 0}
 .especial p{color:#CDBFD6;margin-top:4px;white-space:pre-line}
-.pronto{text-align:center;padding:80px 0;max-width:560px;margin:auto}
-.pronto p{color:var(--tinta-2);margin:16px 0 28px}
-.mini-acoes{display:flex;gap:8px;justify-content:center;margin-top:12px}
-.mini-acoes button{font:600 .88rem var(--corpo);border:0;background:var(--lilas);border-radius:999px;padding:.5em 1em;cursor:pointer}
-@media (max-width:900px){.criar{grid-template-columns:1fr;gap:24px}.criar .lado{position:static}}
+.ver-fone{display:none}
+@media (max-width:900px){
+  .criar{grid-template-columns:1fr;gap:0}
+  .lado{position:fixed;inset:0;z-index:40;background:rgba(26,13,32,.9);display:none;place-items:center;padding:20px}
+  .lado.aberto{display:grid}
+  .fone{width:min(320px,80vw)}
+  .ver-fone{display:inline-flex}
+  .fechar-fone{position:absolute;top:14px;right:14px}
+}
+.fechar-fone{display:none;width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:1.5rem;cursor:pointer}
+@media (max-width:900px){.fechar-fone{display:block}}
 </style>
 </head>
 <body>
 <header class="topo"><div class="cont"><a class="marca" href="/">ns<b>.</b>convites</a><nav><a href="/#modelos">Ver modelos</a><a href="/conta">Meus convites</a></nav></div></header>
 
 <main class="cont">
-<div class="criar" id="criar">
-  <div class="lado">
-    <div class="celular"><canvas id="cv" aria-label="Prévia do seu convite"></canvas><video id="vd" class="vid-oculto" muted playsinline crossorigin="anonymous" preload="auto"></video></div>
-    <div class="mini-acoes"><button type="button" id="verFinal">Ver a foto na moldura</button><button type="button" id="verInicio">Ver do início</button></div>
-  </div>
+<div class="criar">
+  <aside class="lado" id="lado">
+    <button class="fechar-fone" id="fecharFone" aria-label="Fechar prévia">×</button>
+    <div>
+      <div class="fone"><iframe id="previa" src="/convite?embed=1" title="Prévia do convite"></iframe></div>
+      <div class="ir"><button type="button" data-ir="video">Abertura</button><button type="button" data-ir="foto">Foto na moldura</button><button type="button" data-ir="convite">Convite</button></div>
+    </div>
+  </aside>
 
   <form id="form" novalidate>
-    <h1>Monte seu convite</h1>
-    <p style="color:var(--tinta-2)">A prévia ao lado muda enquanto você preenche.</p>
-
+    <h1 id="titulo">Monte seu convite</h1>
+    <p class="sub-h" id="subtitulo">Tudo o que você muda aparece na prévia ao lado, do jeito que o convidado vai ver.</p>
     <div class="especial" id="especialInfo" hidden><strong>Pedido especial</strong><p id="especialDesc"></p></div>
 
-    <div class="bloco">
-      <h2>Modelo</h2>
-      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo" style="flex:1;margin:0"><label for="modelo">Tema escolhido</label><select id="modelo" name="modelo"></select></div></div>
-    </div>
-
-    <div class="bloco">
-      <h2>Foto</h2>
-      <div class="envio">
-        <label class="bt bt-linha">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
-        <span class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem">Prefira foto vertical, com o rosto bem iluminado.</span>
-        <div class="ajustes" id="ajustes" hidden>
-          <label>Aproximar<input type="range" id="zoom" min="1" max="2.5" step=".01" value="1"></label>
-          <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
-          <label>Vertical<input type="range" id="py" min="0" max="1" step=".01" value=".5"></label>
-        </div>
+    <section class="etapa">
+      <h2><span>1</span>Abertura e foto</h2>
+      <p class="dica">O vídeo abre o convite e termina com a foto na moldura.</p>
+      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo"><label for="modelo">Vídeo de abertura</label><select id="modelo"></select></div></div>
+      <label class="bt bt-linha" id="btFoto" style="width:max-content;cursor:pointer">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
+      <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado.</p>
+      <div class="ajustes" id="ajustes" hidden>
+        <label>Aproximar<input type="range" id="zoom" min="1" max="2.5" step=".01" value="1"></label>
+        <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
+        <label>Vertical<input type="range" id="py" min="0" max="1" step=".01" value=".5"></label>
       </div>
-    </div>
+    </section>
 
-    <div class="bloco">
-      <h2>Festa</h2>
+    <section class="etapa">
+      <h2><span>2</span>A festa</h2>
       <div class="duas">
         <div class="campo"><label for="homenageado">Nome de quem faz a festa</label><input id="homenageado" name="homenageado" required autocomplete="off"></div>
         <div class="campo"><label for="idade">Idade que vai completar</label><input id="idade" name="idade" inputmode="numeric" maxlength="3"></div>
       </div>
-      <div class="campo"><label for="titulo">Título do convite</label><input id="titulo" name="titulo" placeholder="Ex.: Os 15 anos da Laura"><span class="ajuda">Se deixar em branco, usamos o nome e a idade.</span></div>
+      <div class="campo"><label for="tituloConvite">Título do convite</label><input id="tituloConvite" name="titulo" placeholder="Ex.: Os 15 anos da Laura"><span class="ajuda">Se deixar em branco, usamos o nome e a idade.</span></div>
       <div class="duas">
         <div class="campo"><label for="data">Data</label><input type="date" id="data" name="data" required></div>
         <div class="campo"><label for="hora">Horário</label><input type="time" id="hora" name="hora" required></div>
       </div>
       <div class="campo"><label for="local">Nome do local</label><input id="local" name="local" placeholder="Ex.: Espaço Jardim das Flores" required></div>
       <div class="campo"><label for="endereco">Endereço</label><input id="endereco" name="endereco" placeholder="Rua, número, bairro, cidade" required></div>
-      <div class="campo"><label for="recado">Recado para os convidados</label><textarea id="recado" name="recado" maxlength="400" placeholder="Ex.: Venha celebrar comigo esse dia tão especial!"></textarea></div>
-      <div class="campo"><label for="presentes">Sugestões de presente</label><textarea id="presentes" name="presentes" placeholder="Uma por linha. Ex.: Roupa tamanho 4"></textarea><span class="ajuda">Opcional. O convidado pode marcar qual vai levar.</span></div>
-    </div>
+      <div class="campo"><label for="recado">Mensagem de abertura</label><textarea id="recado" name="recado" maxlength="400" placeholder="Ex.: Venha celebrar comigo esse dia tão especial!"></textarea></div>
+    </section>
 
-    <div class="bloco" id="blocoMusica">
-      <h2>Música</h2>
-      <div style="display:grid;gap:10px">
-        <label class="opcao"><input type="radio" name="musica" value="modelo" checked><div><strong>Trilha do modelo</strong><span>Incluída no valor.</span></div></label>
-        <label class="opcao"><input type="radio" name="musica" value="personalizada"><div><strong>Música personalizada, + R$ 10</strong><span>Feita com o nome do aniversariante. Combinamos os detalhes pelo WhatsApp.</span></div></label>
+    <section class="etapa">
+      <h2><span>3</span>Estilo</h2>
+      <p class="dica">Escolha um estilo e, se quiser, troque as cores e a fonte do título.</p>
+      <div class="estilos" id="estilos"></div>
+      <div class="cores-linha">
+        <div class="cor-campo">Cor principal<div class="linha"><input type="color" id="corDestaque"><button type="button" class="mini-bt" data-reset="destaque">Usar a do estilo</button></div></div>
+        <div class="cor-campo">Cor de fundo<div class="linha"><input type="color" id="corFundo"><button type="button" class="mini-bt" data-reset="fundo">Usar a do estilo</button></div></div>
+        <div class="cor-campo"><label for="fonte">Fonte do título</label><select id="fonte"></select></div>
       </div>
-    </div>
+    </section>
 
-    <div class="bloco">
-      <h2>Seus dados</h2>
-      
+    <section class="etapa">
+      <h2><span>4</span>O que aparece no convite</h2>
+      <p class="dica">Ligue só o que fizer sentido para a sua festa.</p>
+      <div class="blocos">
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="contagem"><div><strong>Contagem regressiva</strong><span>Dias, horas e minutos até a festa.</span></div></label></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="mapa"><div><strong>Botão "Como chegar"</strong><span>Abre o endereço no mapa do celular.</span></div></label></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="programacao.ativo"><div><strong>Programação</strong><span>Os horários da festa.</span></div></label>
+          <div class="campos"><div id="progItens" style="display:grid;gap:8px"></div><button type="button" class="mini-bt" id="addProg" style="justify-self:start">+ Adicionar horário</button></div></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="traje.ativo"><div><strong>Sugestão de traje</strong><span>Como ir vestido e cores sugeridas.</span></div></label>
+          <div class="campos"><textarea id="trajeTexto" maxlength="300" placeholder="Ex.: Esporte fino. Evite branco."></textarea>
+            <div class="cores-traje" id="trajeCores"></div></div></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="presentes.ativo"><div><strong>Sugestões de presente</strong><span>Lista, chave Pix e tamanhos.</span></div></label>
+          <div class="campos"><div class="campo"><label for="presItens">Presentes (um por linha)</label><textarea id="presItens" placeholder="Ex.: Bicicleta&#10;Kit de pintura"></textarea><span class="ajuda">O convidado pode marcar qual vai levar, para não repetir.</span></div>
+            <div class="campo"><label for="presPix">Chave Pix (opcional)</label><input id="presPix" maxlength="120"></div>
+            <div class="campo"><label for="presTam">Tamanhos (opcional)</label><input id="presTam" maxlength="200" placeholder="Ex.: Roupa 6 anos, calçado 30"></div></div></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="rsvp.ativo"><div><strong>Confirmação de presença</strong><span>Lista de quem vai, com adultos e crianças.</span></div></label>
+          <div class="campos"><label class="check"><input type="checkbox" id="rsvpCriancas"> Perguntar quantas crianças</label>
+            <div class="duas"><div class="campo"><label for="rsvpLimite">Máximo de pessoas por resposta</label><input type="number" id="rsvpLimite" min="1" max="30"></div>
+            <div class="campo"><label for="rsvpPrazo">Confirmar até (opcional)</label><input type="date" id="rsvpPrazo"></div></div></div></div>
+        <div class="bloco-op"><label><input type="checkbox" class="liga" data-bloco="observacoes.ativo"><div><strong>Observações</strong><span>Algo importante, como "levar roupa de banho".</span></div></label>
+          <div class="campos"><textarea id="obsTexto" maxlength="500"></textarea></div></div>
+      </div>
+    </section>
+
+    <section class="etapa" id="etapaMusica">
+      <h2><span>5</span>Música</h2>
+      <div style="display:grid;gap:10px;margin-top:12px">
+        <label class="opcao"><input type="radio" name="musica" value="modelo" checked><div><strong>Trilha do vídeo</strong><span>Incluída no valor.</span></div></label>
+        <label class="opcao"><input type="radio" name="musica" value="personalizada"><div><strong>Música personalizada, + R$ 10</strong><span>Feita com o nome do aniversariante. Combinamos os detalhes depois do pedido.</span></div></label>
+      </div>
+    </section>
+
+    <section class="etapa" id="etapaDados">
+      <h2><span>6</span>Seus dados</h2>
       <div class="campo"><label for="cliente">Seu nome</label><input id="cliente" name="cliente" autocomplete="name" required></div>
       <div class="duas">
         <div class="campo"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" required></div>
         <div class="campo"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email" required><span class="ajuda">O link do convite chega aqui, e é com ele que você entra em Meus convites.</span></div>
       </div>
-    </div>
+    </section>
 
     <p class="erro" id="erro" role="alert" hidden></p>
     <div class="resumo">
-      <div><small>Total</small><span class="total" id="total">R$ 39,90</span></div>
-      <button class="bt bt-festa" id="enviar" type="submit">Ir para o pagamento</button>
+      <div><small id="totalRotulo">Total</small><span class="total" id="total">R$ 39,90</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="bt bt-linha ver-fone" type="button" id="verFone">Ver prévia</button>
+        <button class="bt bt-festa" id="enviar" type="submit">Ver convite pronto</button>
+      </div>
     </div>
   </form>
 </div>
-
 </main>
-
 <script type="module" src="/assets/js/criar.js"></script>
 </body>
 </html>

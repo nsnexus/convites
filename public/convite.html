@@ -7,12 +7,13 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/convite.css">
 <style>
-body{background:#1a0d20}
+body{background:#1a0d20;margin:0}
 .palco{min-height:100svh;display:grid;place-items:center;position:relative;overflow:hidden}
 .palco .fundo{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(30px) brightness(.55);transform:scale(1.1)}
 .tela{position:relative;height:min(100svh,calc(100vw*16/9));aspect-ratio:9/16;max-width:100vw}
-.tela canvas,.tela img.capa{width:100%;height:100%;object-fit:cover}
+.tela canvas{width:100%;height:100%;object-fit:cover}
 @media (max-width:599px){.tela{width:100vw;height:100svh;aspect-ratio:auto}}
 @media (min-width:600px){.tela{height:min(92svh,860px);border-radius:28px;overflow:hidden;box-shadow:0 40px 90px -30px #000}}
 .abrir{position:absolute;inset:0;display:grid;place-items:end center;padding-bottom:16svh;border:0;background:linear-gradient(transparent 50%,rgba(26,13,32,.75));color:#fff;cursor:pointer;font:inherit}
@@ -21,36 +22,18 @@ body{background:#1a0d20}
 .som{position:absolute;top:14px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.9);cursor:pointer;display:grid;place-items:center}
 .descer{position:absolute;bottom:18px;left:50%;translate:-50% 0;color:#fff;text-decoration:none;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0;transition:opacity .6s}
 .descer.ver{opacity:1}
-.cartao{background:var(--papel);border-radius:32px 32px 0 0;margin-top:-28px;position:relative;padding:48px 0 72px}
-.cartao .cont{max-width:620px}
-.cartao h1{font-size:clamp(2.4rem,9vw,3.6rem);text-wrap:balance}
-.recado{font-size:1.15rem;color:var(--tinta-2);margin-top:16px}
-.info{margin:36px 0;display:grid;gap:2px;border-radius:20px;overflow:hidden}
-.info>div{background:#fff;padding:18px 20px;display:grid;grid-template-columns:28px 1fr;gap:14px;align-items:start}
-.info svg{color:var(--festa);margin-top:2px}
-.info strong{display:block;font-family:var(--disp);font-size:1.2rem}
-.info span{color:var(--tinta-2)}
-.botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.botoes .bt:first-child{grid-column:1/-1}
-.bloco-c{margin-top:48px}
-.bloco-c h2{font-size:1.8rem;margin-bottom:16px}
-.presentes{display:grid;gap:8px}
-.escolha{display:flex;gap:12px;align-items:center;padding:14px 16px;background:#fff;border-radius:14px;cursor:pointer;border:1.5px solid transparent}
-.escolha:has(input:checked){border-color:var(--festa)}
-.escolha input{accent-color:var(--festa);width:18px;height:18px}
-.sim-nao{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
-.sim-nao label{text-align:center;padding:14px;border-radius:14px;background:#fff;border:1.5px solid var(--linha);cursor:pointer;font-weight:600}
-.sim-nao label:has(input:checked){border-color:var(--festa);background:#FFF0F5}
-.sim-nao input{position:absolute;opacity:0}
-.ok{background:#fff;border-radius:20px;padding:28px;text-align:center}
-.ok strong{font:800 1.6rem var(--disp);display:block;margin-bottom:6px}
 .carregando{min-height:100svh;display:grid;place-items:center;color:#fff;text-align:center;padding:24px}
+/* dentro do editor (iframe): sem tela cheia */
+.embed .palco{min-height:0;height:auto}
+.embed .tela{width:100%;height:auto;aspect-ratio:9/16;border-radius:0;box-shadow:none}
+.embed .palco .fundo{display:none}
 </style>
 </head>
 <body>
 <div class="carregando" id="estado">Abrindo convite…</div>
 
 <div id="app" hidden>
+  <div id="faixa"></div>
   <section class="palco">
     <div class="fundo" id="fundo"></div>
     <div class="tela">
@@ -62,40 +45,7 @@ body{background:#1a0d20}
     <a class="descer" id="descer" href="#detalhes">Ver detalhes da festa<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
   </section>
 
-  <section class="cartao" id="detalhes">
-    <div class="cont">
-      <h1 id="titulo"></h1>
-      <p class="recado" id="recado"></p>
-      <div class="info">
-        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><div><strong id="quando"></strong><span id="hora"></span></div></div>
-        <div><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg><div><strong id="local"></strong><span id="endereco"></span></div></div>
-      </div>
-      <div class="botoes">
-        <a class="bt bt-festa" href="#presenca">Confirmar presença</a>
-        <a class="bt bt-linha" id="mapa" target="_blank" rel="noopener">Como chegar</a>
-        <button class="bt bt-linha" id="agenda" type="button">Salvar na agenda</button>
-      </div>
-
-      <form class="bloco-c" id="presenca">
-        <h2>Você vai?</h2>
-        <div class="campo"><label for="nome">Seu nome</label><input id="nome" name="nome" autocomplete="name" required></div>
-        <div class="sim-nao">
-          <label><input type="radio" name="vai" value="sim" required>Sim, eu vou</label>
-          <label><input type="radio" name="vai" value="nao">Não vou poder</label>
-        </div>
-        <div class="campo" id="campoQtd"><label for="qtd">Quantas pessoas, contando você?</label><input id="qtd" name="qtd" type="number" min="1" max="20" value="1"></div>
-        <div id="blocoPresentes" hidden>
-          <h2 style="font-size:1.4rem;margin:8px 0 6px">Sugestões de presente</h2>
-          <p style="color:var(--tinta-2);margin-bottom:12px;font-size:.95rem">Opcional. Marque se quiser avisar o que vai levar.</p>
-          <div class="presentes" id="presentes"></div>
-        </div>
-        <div class="campo" style="margin-top:18px"><label for="msg">Recado para o aniversariante</label><textarea id="msg" name="msg" maxlength="300"></textarea></div>
-        <p class="erro" id="erro" hidden></p>
-        <button class="bt bt-festa" style="width:100%" id="enviar">Enviar resposta</button>
-      </form>
-      <div class="ok bloco-c" id="ok" hidden><strong>Resposta enviada</strong><span id="okTxt"></span></div>
-    </div>
-  </section>
+  <div id="convite"></div>
 </div>
 
 <script type="module" src="/assets/js/convite.js"></script>

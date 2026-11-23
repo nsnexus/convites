@@ -1,5 +1,6 @@
 import { json, aleatorio, limpo, um, rodar, uuid, emailValido } from '../../_lib/util.js';
 import { salvarArquivo } from '../../_lib/arquivos.js';
+import { limparPersonalizacao } from '../../_lib/personalizacao.js';
 
 const PRECO = 3990, PRECO_MUSICA = 1000;
 const txt = (fd, k, max = 200) => (fd.get(k) || '').toString().trim().slice(0, max);
@@ -31,6 +32,9 @@ export async function onRequestPost({ request, env }) {
   let ajuste = { zoom: 1, x: .5, y: .5 };
   try { const a = JSON.parse(txt(fd, 'ajuste', 200)); ajuste = { zoom: Math.min(3, Math.max(1, +a.zoom || 1)), x: Math.min(1, Math.max(0, +a.x)), y: Math.min(1, Math.max(0, +a.y)) }; } catch {}
 
+  let pers;
+  try { pers = limparPersonalizacao(JSON.parse(txt(fd, 'personalizacao', 20000) || '{}')); } catch { pers = limparPersonalizacao({}); }
+
   const base = txt(fd, 'homenageado', 40).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'convite';
   const slug = `${base}-${aleatorio(5)}`;
   const musica = !especial && txt(fd, 'musica', 20) === 'personalizada' ? 'personalizada' : 'modelo';
@@ -43,16 +47,16 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const foto_url = await salvarArquivo(env, `fotos/${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), 'image/jpeg');
-    const id = uuid(), valor = especial ? especial.valor_centavos : PRECO + (musica === 'personalizada' ? PRECO_MUSICA : 0);
+    const id = uuid(), tokenEdicao = aleatorio(24), valor = especial ? especial.valor_centavos : PRECO + (musica === 'personalizada' ? PRECO_MUSICA : 0);
     await rodar(env, `INSERT INTO convites (id, slug, cliente_id, modelo, tipo, pedido_especial_id, homenageado, idade, titulo, data, hora, local, endereco, recado, presentes,
-      foto_url, ajuste, musica, cliente_nome, cliente_whatsapp, cliente_email, valor_centavos, token_painel) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      foto_url, ajuste, musica, cliente_nome, cliente_whatsapp, cliente_email, valor_centavos, token_painel, personalizacao) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       id, slug, cli.id, modelo, especial ? 'especial' : 'padrao', especial?.id ?? null,
       txt(fd, 'homenageado', 80), txt(fd, 'idade', 3) || null, txt(fd, 'titulo', 120) || null,
       txt(fd, 'data', 10), txt(fd, 'hora', 5), txt(fd, 'local', 120), txt(fd, 'endereco', 200), txt(fd, 'recado', 400) || null,
-      JSON.stringify(txt(fd, 'presentes', 1000).split('\n').map(s => s.trim()).filter(Boolean).slice(0, 30)),
-      foto_url, JSON.stringify(ajuste), musica, nome, whatsapp, email, valor, aleatorio(24));
+      JSON.stringify(pers.blocos.presentes.itens),
+      foto_url, JSON.stringify(ajuste), musica, nome, whatsapp, email, valor, tokenEdicao, JSON.stringify(pers));
     if (especial) await rodar(env, "UPDATE pedidos_especiais SET status = 'aguardando_pagamento' WHERE id = ?", especial.id);
-    return json({ id, slug, valor_centavos: valor });
+    return json({ id, slug, valor_centavos: valor, token: tokenEdicao });
   } catch (e) {
     console.error(e);
     return json({ erro: 'Não foi possível salvar o pedido.' }, 500);

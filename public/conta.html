@@ -25,7 +25,8 @@ main{padding:40px 0 96px;max-width:760px}
 .st{display:inline-block;font:600 .78rem var(--corpo);padding:.25em .7em;border-radius:999px;margin-left:6px;vertical-align:middle}
 .st-aguardando_pagamento{background:#FFF3D6;color:#8A5A00}.st-pago,.st-publicado{background:#DDF5EC;color:var(--verde)}.st-cancelado{background:#FFE4EC;color:var(--festa-esc)}
 .voltar{border:0;background:none;font:600 .95rem var(--corpo);color:var(--tinta-2);cursor:pointer;padding:0;margin-bottom:16px}
-.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}
+.numeros{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0}
+@media (max-width:520px){.numeros{grid-template-columns:repeat(2,1fr)}}
 .numeros div{background:#fff;border-radius:16px;padding:16px}
 .numeros b{font:800 2rem/1 var(--disp);display:block}
 .numeros span{color:var(--tinta-2);font-size:.88rem}
@@ -37,6 +38,7 @@ main{padding:40px 0 96px;max-width:760px}
 .resp .s.sim{color:var(--verde)}.resp .s.nao{color:var(--festa-esc)}
 .resp p{color:var(--tinta-2);font-size:.92rem;margin-top:4px}
 .ok-msg{color:var(--verde);font-weight:600}
+.faixa-lib{background:var(--tinta);color:#fff;border-radius:18px;padding:16px 18px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -72,26 +74,15 @@ main{padding:40px 0 96px;max-width:760px}
   <section id="telaConvite" hidden>
     <button class="voltar" id="voltar">← Meus convites</button>
     <h1 id="cTitulo" style="font-size:2.2rem"></h1>
-    <div class="numeros"><div><b id="nVao">0</b><span>pessoas confirmadas</span></div><div><b id="nResp">0</b><span>respostas</span></div><div><b id="nNao">0</b><span>não vão</span></div></div>
+    <div class="numeros"><div><b id="nAdultos">0</b><span>adultos</span></div><div><b id="nCriancas">0</b><span>crianças</span></div><div><b id="nNao">0</b><span>não vão</span></div><div><b id="nResp">0</b><span>respostas</span></div></div>
+    <div class="faixa-lib" id="faixaLib" hidden><span>Este convite ainda é uma <b>prévia</b>: libere para compartilhar e receber confirmações.</span><a class="bt bt-festa" id="cLiberar">Liberar convite</a></div>
     <div class="acoes-c">
       <a class="bt bt-festa" id="cAbrir" target="_blank">Abrir convite</a>
       <button class="bt bt-linha" id="cCopiar">Copiar link</button>
       <a class="bt bt-linha" id="cZap" target="_blank">Mandar no WhatsApp</a>
+      <a class="bt bt-linha" id="cEditar">Editar convite</a>
     </div>
-    <div class="secao-c"><h2>Quem respondeu</h2><div id="respostas"></div></div>
-    <form class="secao-c" id="formEditar">
-      <h2>Corrigir informações</h2>
-      <div class="campo"><label for="eTitulo">Título do convite</label><input id="eTitulo" name="titulo"></div>
-      <div class="duas">
-        <div class="campo"><label for="eData">Data</label><input type="date" id="eData" name="data" required></div>
-        <div class="campo"><label for="eHora">Horário</label><input type="time" id="eHora" name="hora" required></div>
-      </div>
-      <div class="campo"><label for="eLocal">Nome do local</label><input id="eLocal" name="local" required></div>
-      <div class="campo"><label for="eEndereco">Endereço</label><input id="eEndereco" name="endereco" required></div>
-      <div class="campo"><label for="eRecado">Recado</label><textarea id="eRecado" name="recado" maxlength="400"></textarea></div>
-      <p class="erro" id="erroEditar" hidden></p><p class="ok-msg" id="okEditar" hidden>Alterações salvas. O link continua o mesmo.</p>
-      <button class="bt bt-festa">Salvar alterações</button>
-    </form>
+    <div class="secao-c"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><h2 style="margin:0">Lista de convidados</h2><button class="bt bt-linha" id="cPlanilha" style="padding:.6em 1.1em">Baixar planilha</button></div><div id="respostas"></div></div>
   </section>
 </main>
 <script type="module" src="/assets/js/conta.js"></script>

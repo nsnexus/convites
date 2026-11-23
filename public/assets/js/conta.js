@@ -1,3 +1,4 @@
+import { CONFIG, reais } from './config.js';
 const $ = id => document.getElementById(id);
 const telas = ['telaEmail', 'telaCodigo', 'telaLista', 'telaConvite'];
 const mostrar = t => { telas.forEach(x => $(x).hidden = x !== t); $('sair').hidden = !['telaLista', 'telaConvite'].includes(t); scrollTo(0, 0); };
@@ -45,49 +46,54 @@ async function carregarLista() {
     b.querySelector('h2').textContent = c.titulo || c.homenageado;
     const st = document.createElement('span'); st.className = `st st-${c.status}`; st.textContent = NOME_ST[c.status]; b.querySelector('h2').append(st);
     b.querySelector('.meta').textContent = `${dataBR(c.data)} às ${c.hora.replace(':', 'h')} · ${c.local}`;
-    b.querySelector('.num').textContent = `${c.confirmados} ${c.confirmados == 1 ? 'pessoa confirmada' : 'pessoas confirmadas'}`;
+    b.querySelector('.num').textContent = c.status === 'aguardando_pagamento' ? 'Prévia: falta liberar' : `${c.confirmados} ${c.confirmados == 1 ? 'pessoa confirmada' : 'pessoas confirmadas'}`;
     b.onclick = () => abrir(c.slug);
     l.append(b);
   });
   mostrar('telaLista');
 }
 
-let atual;
+let atual, lista = [];
 async function abrir(slug) {
-  const j = await api(`convites?slug=${slug}`); atual = j.convite;
+  const j = await api(`convites?slug=${slug}`); atual = j.convite; lista = j.confirmacoes;
   const c = j.convite, l = j.confirmacoes, link = `${location.origin}/c/${c.slug}`;
   $('cTitulo').textContent = c.titulo || c.homenageado;
-  $('nVao').textContent = l.filter(x => x.vai).reduce((s, x) => s + x.pessoas, 0);
-  $('nResp').textContent = l.length; $('nNao').textContent = l.filter(x => !x.vai).length;
+  const vao = l.filter(x => x.vai);
+  $('nAdultos').textContent = vao.reduce((s, x) => s + (x.adultos || x.pessoas || 0), 0);
+  $('nCriancas').textContent = vao.reduce((s, x) => s + (x.criancas || 0), 0);
+  $('nResp').textContent = l.length; $('nNao').textContent = l.length - vao.length;
   const pronto = c.status === 'pago' || c.status === 'publicado';
-  $('cAbrir').href = link; $('cAbrir').hidden = !pronto; $('cCopiar').hidden = !pronto; $('cZap').hidden = !pronto;
+  $('faixaLib').hidden = pronto;
+  $('cLiberar').href = CONFIG.checkoutUrl ? CONFIG.checkoutUrl + encodeURIComponent(c.pedido_id) : `/obrigado?pedido=${c.pedido_id}`;
+  $('cLiberar').textContent = `Liberar convite · ${reais(c.valor_centavos)}`;
+  $('cAbrir').href = link; $('cAbrir').textContent = pronto ? 'Abrir convite' : 'Ver prévia';
+  $('cCopiar').hidden = !pronto; $('cZap').hidden = !pronto; $('cPlanilha').hidden = !l.length;
+  $('cEditar').href = `/criar?editar=${c.slug}`;
   $('cZap').href = `https://wa.me/?text=${encodeURIComponent(`Você está convidado! ${link}`)}`;
   $('cCopiar').onclick = () => navigator.clipboard.writeText(link).then(() => { $('cCopiar').textContent = 'Link copiado'; setTimeout(() => $('cCopiar').textContent = 'Copiar link', 2000); });
   const r = $('respostas'); r.textContent = '';
-  if (!pronto) r.innerHTML = '<p style="color:var(--tinta-2)">O convite entra no ar assim que o pagamento for confirmado.</p>';
+  if (!pronto) r.innerHTML = '<p style="color:var(--tinta-2)">As confirmações aparecem aqui depois que o convite for liberado.</p>';
   else if (!l.length) r.innerHTML = '<p style="color:var(--tinta-2)">Ninguém respondeu ainda. Mande o link para os convidados.</p>';
   l.forEach(x => {
     const d = document.createElement('div'); d.className = 'resp';
     d.innerHTML = '<span class="s"></span><strong></strong><p></p>';
     d.querySelector('.s').className = `s ${x.vai ? 'sim' : 'nao'}`;
-    d.querySelector('.s').textContent = x.vai ? `Vai · ${x.pessoas} ${x.pessoas > 1 ? 'pessoas' : 'pessoa'}` : 'Não vai';
+    const ad = x.adultos || (x.vai ? x.pessoas : 0), cr = x.criancas || 0;
+    d.querySelector('.s').textContent = x.vai ? `Vai · ${ad} ${ad > 1 ? 'adultos' : 'adulto'}${cr ? ` e ${cr} ${cr > 1 ? 'crianças' : 'criança'}` : ''}` : 'Não vai';
     d.querySelector('strong').textContent = x.nome;
     d.querySelector('p').textContent = [x.presente && `Presente: ${x.presente}`, x.recado].filter(Boolean).join(' — ');
     r.append(d);
   });
-  const f = $('formEditar');
-  f.titulo.value = c.titulo || ''; f.data.value = c.data; f.hora.value = c.hora; f.local.value = c.local; f.endereco.value = c.endereco; f.recado.value = c.recado || '';
-  erro('erroEditar', ''); $('okEditar').hidden = true;
   mostrar('telaConvite');
 }
 $('voltar').onclick = carregarLista;
-$('formEditar').onsubmit = async e => {
-  e.preventDefault(); erro('erroEditar', ''); $('okEditar').hidden = true;
-  const f = e.target;
-  try {
-    await api('convites', { metodo: 'PATCH', corpo: { slug: atual.slug, titulo: f.titulo.value, data: f.data.value, hora: f.hora.value, local: f.local.value, endereco: f.endereco.value, recado: f.recado.value } });
-    $('okEditar').hidden = false;
-  } catch (err) { erro('erroEditar', err.message); }
+$('cPlanilha').onclick = () => {
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const linhas = [['Nome', 'Vai', 'Adultos', 'Crianças', 'Presente', 'Recado', 'Respondeu em'].map(esc).join(';')];
+  lista.forEach(x => linhas.push([x.nome, x.vai ? 'Sim' : 'Não', x.vai ? (x.adultos || x.pessoas) : 0, x.criancas || 0, x.presente || '', x.recado || '', new Date(x.criado_em).toLocaleString('pt-BR')].map(esc).join(';')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = `convidados-${atual.slug}.csv`; a.click();
 };
 
 // já logado? vai direto para a lista

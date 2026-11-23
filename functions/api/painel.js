@@ -6,7 +6,7 @@ export async function onRequestGet({ request, env }) {
   if (!slug || !k) return json({ erro: 'Link incompleto.' }, 400);
   const c = await um(env, 'SELECT id, slug, homenageado, titulo, data, hora, local, status FROM convites WHERE slug = ? AND token_painel = ?', slug, k);
   if (!c) return json({ erro: 'Link do painel inválido.' }, 404);
-  const lista = (await todos(env, 'SELECT nome, vai, pessoas, presente, recado, criado_em FROM confirmacoes WHERE convite_id = ? ORDER BY criado_em DESC', c.id)).map(x => ({ ...x, vai: !!x.vai }));
+  const lista = (await todos(env, 'SELECT nome, vai, pessoas, adultos, criancas, presente, recado, criado_em FROM confirmacoes WHERE convite_id = ? ORDER BY criado_em DESC', c.id)).map(x => ({ ...x, vai: !!x.vai }));
   delete c.id;
   return json({ convite: c, confirmacoes: lista });
 }

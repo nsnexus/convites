@@ -1,0 +1,154 @@
+/* Convite: a parte depois do vídeo. Cores e fontes vêm de variáveis (estilos.js). */
+.cv{background:var(--fundo);color:var(--texto);font:400 17px/1.6 var(--f-corpo);position:relative;border-radius:32px 32px 0 0;margin-top:-28px;padding:44px 0 40px;overflow:hidden}
+.cv *{box-sizing:border-box}
+.cv-in{width:min(620px,100% - 36px);margin:0 auto;position:relative;z-index:1}
+.cv h1,.cv h2{font-family:var(--f-titulo);margin:0;line-height:1.05;font-weight:700}
+.cv p{margin:0}
+.cv a{color:inherit}
+.cv-topo{text-align:center;padding:12px 0 8px}
+.cv-chamada{font-size:.95rem;color:var(--texto-2);letter-spacing:.04em}
+.cv-titulo{font-size:clamp(2.6rem,11vw,4.2rem);margin:10px 0 14px!important;text-wrap:balance;color:var(--texto)}
+.cv-quando-curto{font-weight:700;color:var(--destaque);font-size:1.05rem}
+.cv-bloco{margin-top:34px}
+.cv-bloco h2{font-size:1.9rem;margin-bottom:14px;color:var(--texto)}
+.cv-cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:20px;padding:18px 20px}
+.cv-recado{font-size:1.12rem;text-align:center;color:var(--texto-2);max-width:34ch;margin:22px auto 0!important}
+
+/* contagem */
+.cv-contagem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:26px}
+.cv-contagem div{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:12px 4px;text-align:center}
+.cv-contagem b{display:block;font:700 1.9rem/1 var(--f-titulo);color:var(--destaque)}
+.cv-contagem span{font-size:.75rem;color:var(--texto-2)}
+
+/* quando e onde */
+.cv-info{display:grid;gap:10px}
+.cv-info .cv-cartao{display:grid;grid-template-columns:26px 1fr;gap:12px;align-items:start}
+.cv-info svg{color:var(--destaque);margin-top:3px}
+.cv-info strong{display:block;font-size:1.08rem}
+.cv-info span{color:var(--texto-2);font-size:.95rem}
+.cv-bts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.cv-bt{display:inline-flex;align-items:center;justify-content:center;gap:.4em;font:700 .95rem var(--f-corpo);padding:.85em 1.3em;border-radius:999px;border:0;cursor:pointer;text-decoration:none;background:var(--destaque);color:var(--sobre-destaque)}
+.cv-bt-linha{background:transparent;color:var(--texto);box-shadow:inset 0 0 0 2px var(--linha)}
+.cv-bt[disabled]{opacity:.5;cursor:not-allowed}
+
+/* programação */
+.cv-prog{list-style:none;margin:0;padding:0;border-left:2px solid var(--destaque-suave);margin-left:8px}
+.cv-prog li{position:relative;padding:0 0 18px 22px}
+.cv-prog li::before{content:'';position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--destaque)}
+.cv-prog b{display:block;color:var(--destaque);font-size:.95rem}
+
+/* traje */
+.cv-cores{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.cv-cores i{width:34px;height:34px;border-radius:50%;box-shadow:inset 0 0 0 2px rgba(0,0,0,.12)}
+
+/* presentes */
+.cv-presentes{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.cv-presentes li{display:flex;justify-content:space-between;gap:10px}
+.cv-presentes small{color:var(--texto-2)}
+.cv-pix{display:flex;gap:8px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.cv-pix code{background:var(--destaque-suave);padding:.45em .7em;border-radius:10px;font:600 .95rem var(--f-corpo);word-break:break-all;color:var(--texto)}
+
+/* confirmação */
+.cv-form .campo-cv{display:grid;gap:6px;margin-bottom:14px}
+.cv-form label{font-weight:700;font-size:.95rem}
+.cv-form input,.cv-form textarea{font:inherit;color:var(--texto);background:var(--cartao);border:1.5px solid var(--linha);border-radius:14px;padding:.8em 1em;width:100%}
+.cv-form input:focus,.cv-form textarea:focus{outline:none;border-color:var(--destaque)}
+.cv-form textarea{min-height:80px;resize:vertical}
+.cv-sn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.cv-sn label,.cv-escolha{display:block;text-align:center;padding:13px;border-radius:14px;background:var(--cartao);border:1.5px solid var(--linha);cursor:pointer;font-weight:700}
+.cv-sn label:has(input:checked),.cv-escolha:has(input:checked){border-color:var(--destaque);background:var(--destaque-suave)}
+.cv-sn input,.cv-escolha input{position:absolute;opacity:0;pointer-events:none}
+.cv-qtd{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cv-contador{display:flex;align-items:center;justify-content:space-between;background:var(--cartao);border:1.5px solid var(--linha);border-radius:14px;padding:6px}
+.cv-contador button{width:40px;height:40px;border-radius:10px;border:0;background:var(--destaque-suave);color:var(--texto);font:700 1.3rem var(--f-corpo);cursor:pointer}
+.cv-contador output{font:700 1.3rem var(--f-titulo)}
+.cv-escolhas{display:grid;gap:6px}
+.cv-escolha{text-align:left;font-weight:600;display:flex;justify-content:space-between}
+.cv-escolha small{color:var(--texto-2);font-weight:400}
+.cv-erro{color:#d1204f;font-weight:700;font-size:.92rem;margin-bottom:10px}
+.cv-ok{text-align:center;padding:28px}
+.cv-ok strong{font:700 1.8rem var(--f-titulo);display:block;margin-bottom:6px;color:var(--destaque)}
+.cv-aviso{color:var(--texto-2);font-size:.95rem}
+.cv-rodape{text-align:center;margin-top:44px;font-size:.82rem;color:var(--texto-2)}
+.cv-rodape a{font-weight:700}
+
+/* prévia (antes do pagamento) */
+.cv-faixa-previa{position:sticky;top:0;z-index:20;background:#1c1424;color:#fff;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;font:500 .92rem system-ui,sans-serif}
+.cv-faixa-previa b{font-weight:700}
+.cv-faixa-previa a,.cv-faixa-previa button{font:700 .9rem system-ui,sans-serif;background:#e8336d;color:#fff;border:0;border-radius:999px;padding:.6em 1.1em;text-decoration:none;cursor:pointer}
+.cv-faixa-previa .sec{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.5)}
+.cv.em-previa::after{content:'PRÉVIA';position:absolute;inset:0;display:grid;place-items:center;font:800 18vw/1 system-ui,sans-serif;color:var(--texto);opacity:.05;transform:rotate(-24deg);pointer-events:none;z-index:0}
+
+/* ===== jeitos de cada estilo ===== */
+/* Clássico: filetes dourados, títulos em versalete */
+[data-estilo=classico] .cv-topo{border:1px solid var(--destaque);outline:1px solid var(--destaque);outline-offset:5px;padding:30px 18px;margin:6px 6px 0}
+[data-estilo=classico] .cv-chamada,[data-estilo=classico] .cv-bloco h2{font-variant:small-caps;letter-spacing:.08em}
+[data-estilo=classico] .cv-bloco h2{text-align:center;font-size:1.7rem}
+[data-estilo=classico] .cv-bloco h2::after{content:'';display:block;width:60px;height:1px;background:var(--destaque);margin:10px auto 0}
+[data-estilo=classico] .cv-cartao{border-radius:4px}
+
+/* Princesa: cantos bem arredondados e brilhos */
+[data-estilo=princesa] .cv-titulo{font-style:italic;color:var(--destaque)}
+[data-estilo=princesa] .cv-chamada::before,[data-estilo=princesa] .cv-chamada::after{content:' ✦ ';color:var(--destaque)}
+[data-estilo=princesa] .cv-cartao,[data-estilo=princesa] .cv-contagem div{border-radius:26px;box-shadow:0 10px 30px -18px var(--destaque)}
+[data-estilo=princesa] .cv-bloco h2{text-align:center}
+[data-estilo=princesa] .cv::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 15% 8%,var(--destaque-suave) 0 90px,transparent 91px),radial-gradient(circle at 92% 30%,var(--destaque-suave) 0 60px,transparent 61px);opacity:.8}
+
+/* Jardim: arco no topo e folhagem suave */
+[data-estilo=jardim] .cv-topo{background:var(--cartao);border:1px solid var(--linha);border-radius:220px 220px 24px 24px;padding:60px 20px 30px}
+[data-estilo=jardim] .cv-chamada::before{content:'❦';display:block;font-size:1.6rem;color:var(--destaque);margin-bottom:4px}
+[data-estilo=jardim] .cv-bloco h2{text-align:center}
+[data-estilo=jardim] .cv-bloco h2::before{content:'— ';color:var(--destaque)}[data-estilo=jardim] .cv-bloco h2::after{content:' —';color:var(--destaque)}
+
+/* Minimalista: alinhado à esquerda, sem caixas */
+[data-estilo=minimal] .cv-topo{text-align:left;border-bottom:2px solid var(--texto);padding-bottom:26px}
+[data-estilo=minimal] .cv-titulo{font-weight:800;letter-spacing:-.04em}
+[data-estilo=minimal] .cv-quando-curto{color:var(--texto)}
+[data-estilo=minimal] .cv-recado{text-align:left;margin-left:0!important}
+[data-estilo=minimal] .cv-cartao,[data-estilo=minimal] .cv-contagem div{background:transparent;border:0;border-top:1px solid var(--linha);border-radius:0;padding:16px 0}
+[data-estilo=minimal] .cv-bloco h2{font-size:1.2rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+[data-estilo=minimal] .cv-bt{border-radius:0}
+
+/* Neon: brilho */
+[data-estilo=neon] .cv-titulo{color:#fff;text-shadow:0 0 6px var(--destaque),0 0 22px var(--destaque),0 0 44px var(--destaque)}
+[data-estilo=neon] .cv-cartao,[data-estilo=neon] .cv-contagem div{border-color:var(--destaque);box-shadow:0 0 0 1px var(--destaque),0 0 18px -6px var(--destaque)}
+[data-estilo=neon] .cv-contagem b{text-shadow:0 0 12px var(--destaque)}
+[data-estilo=neon] .cv-bt{box-shadow:0 0 18px -2px var(--destaque)}
+[data-estilo=neon] .cv-bloco h2{text-transform:uppercase;font-size:1.4rem;letter-spacing:.06em}
+
+/* Ingresso VIP: cartões com picote */
+[data-estilo=ingresso] .cv-topo{background:var(--destaque);color:var(--sobre-destaque);border-radius:14px;padding:26px 18px;-webkit-mask:radial-gradient(circle 14px at 0 50%,#0000 98%,#000) left/51% 100% no-repeat,radial-gradient(circle 14px at 100% 50%,#0000 98%,#000) right/51% 100% no-repeat}
+[data-estilo=ingresso] .cv-topo .cv-titulo,[data-estilo=ingresso] .cv-topo .cv-quando-curto,[data-estilo=ingresso] .cv-topo .cv-chamada{color:var(--sobre-destaque)}
+[data-estilo=ingresso] .cv-chamada{text-transform:uppercase;letter-spacing:.3em;font-size:.8rem}
+[data-estilo=ingresso] .cv-titulo{letter-spacing:.02em}
+[data-estilo=ingresso] .cv-cartao{border-style:dashed}
+[data-estilo=ingresso] .cv-bloco h2{text-transform:uppercase;letter-spacing:.04em}
+
+/* Esportivo: gramado listrado e placar */
+[data-estilo=esportivo]{background:repeating-linear-gradient(0deg,var(--fundo) 0 60px,color-mix(in srgb,var(--fundo) 88%,#000) 60px 120px)}
+[data-estilo=esportivo] .cv-titulo,[data-estilo=esportivo] .cv-bloco h2{text-transform:uppercase;letter-spacing:.03em}
+[data-estilo=esportivo] .cv-contagem div{background:#111;border:2px solid var(--destaque);border-radius:8px}
+[data-estilo=esportivo] .cv-contagem b{font-family:'Courier New',monospace;font-weight:700}
+[data-estilo=esportivo] .cv-contagem span{color:#ccc}
+[data-estilo=esportivo] .cv-cartao{border-radius:8px;border-left:6px solid var(--destaque)}
+[data-estilo=esportivo] .cv-topo{border-top:4px solid var(--destaque);border-bottom:4px solid var(--destaque);padding:22px 0}
+
+/* Quadrinhos: contorno grosso, sombra deslocada, retícula */
+[data-estilo=hq]{background-image:radial-gradient(rgba(0,0,0,.13) 1.2px,transparent 1.4px);background-size:12px 12px}
+[data-estilo=hq] .cv-titulo{color:var(--destaque);-webkit-text-stroke:2px #141414;text-shadow:4px 4px 0 #141414;transform:rotate(-2deg);letter-spacing:.03em}
+[data-estilo=hq] .cv-cartao,[data-estilo=hq] .cv-contagem div,[data-estilo=hq] .cv-sn label,[data-estilo=hq] .cv-escolha,[data-estilo=hq] .cv-form input,[data-estilo=hq] .cv-form textarea,[data-estilo=hq] .cv-contador{background:#fff;border:3px solid #141414;border-radius:6px;box-shadow:5px 5px 0 #141414}
+[data-estilo=hq] .cv-bt{border:3px solid #141414;box-shadow:4px 4px 0 #141414;border-radius:6px}
+[data-estilo=hq] .cv-bloco h2{display:inline-block;background:var(--destaque);color:#fff;padding:2px 12px;border:3px solid #141414;transform:rotate(-1.5deg);letter-spacing:.04em}
+
+/* Aquarela: manchas suaves */
+[data-estilo=aquarela]::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 10% 5%,color-mix(in srgb,var(--destaque) 30%,transparent),transparent 70%),radial-gradient(ellipse 50% 35% at 95% 35%,color-mix(in srgb,#ff9ec4 35%,transparent),transparent 70%),radial-gradient(ellipse 60% 30% at 20% 75%,color-mix(in srgb,#8fd3ff 30%,transparent),transparent 70%);filter:blur(6px)}
+[data-estilo=aquarela] .cv-titulo{color:var(--destaque);font-size:clamp(3rem,13vw,4.8rem)}
+[data-estilo=aquarela] .cv-cartao,[data-estilo=aquarela] .cv-contagem div{background:color-mix(in srgb,#fff 70%,transparent);backdrop-filter:blur(4px);border-radius:24px}
+[data-estilo=aquarela] .cv-bloco h2{text-align:center;color:var(--destaque);font-size:2.3rem}
+
+/* Rústico: pontos de costura e papel kraft */
+[data-estilo=rustico] .cv-cartao,[data-estilo=rustico] .cv-contagem div{background:color-mix(in srgb,var(--fundo) 70%,#fff);border:2px dashed var(--destaque);border-radius:10px}
+[data-estilo=rustico] .cv-titulo{font-size:clamp(3.2rem,14vw,5rem);letter-spacing:.02em}
+[data-estilo=rustico] .cv-bloco h2{text-align:center;font-size:2.4rem}
+[data-estilo=rustico] .cv-topo{border-bottom:2px dashed var(--destaque);padding-bottom:22px}
+[data-estilo=rustico] .cv-bt{border-radius:8px}

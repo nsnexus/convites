@@ -27,7 +27,7 @@ main{padding:40px 0 80px;max-width:720px}
   <h1 id="titulo" style="font-size:2.4rem">Carregando…</h1>
   <p id="sub" style="color:var(--tinta-2)"></p>
   <div class="numeros" id="numeros" hidden>
-    <div><b id="nVao">0</b><span>pessoas confirmadas</span></div>
+    <div><b id="nVao">0</b><span>adultos e crianças</span></div>
     <div><b id="nResp">0</b><span>respostas</span></div>
     <div><b id="nNao">0</b><span>não vão</span></div>
   </div>
@@ -42,12 +42,13 @@ $('titulo').textContent = c.titulo || c.homenageado;
 $('sub').innerHTML = `Link do convite: <a href="/c/${c.slug}">${location.host}/c/${c.slug}</a>`;
 $('numeros').hidden = false;
 $('nVao').textContent = l.filter(x => x.vai).reduce((s, x) => s + x.pessoas, 0);
+$('sub').append(` · ${l.filter(x => x.vai).reduce((s, x) => s + (x.adultos || x.pessoas), 0)} adultos, ${l.filter(x => x.vai).reduce((s, x) => s + (x.criancas || 0), 0)} crianças`);
 $('nResp').textContent = l.length; $('nNao').textContent = l.filter(x => !x.vai).length;
 if (!l.length) $('lista').innerHTML = '<p style="color:var(--tinta-2)">Ninguém respondeu ainda. Compartilhe o link do convite no WhatsApp.</p>';
 l.forEach(x => {
   const d = document.createElement('div'); d.className = 'item';
   d.innerHTML = `<span class="st ${x.vai ? 'sim' : 'nao'}"></span><strong></strong><p></p>`;
-  d.querySelector('.st').textContent = x.vai ? `Vai · ${x.pessoas} ${x.pessoas > 1 ? 'pessoas' : 'pessoa'}` : 'Não vai';
+  d.querySelector('.st').textContent = x.vai ? `Vai · ${x.adultos || x.pessoas} adulto(s)${x.criancas ? `, ${x.criancas} criança(s)` : ''}` : 'Não vai';
   d.querySelector('strong').textContent = x.nome;
   d.querySelector('p').textContent = [x.presente && `Presente: ${x.presente}`, x.recado].filter(Boolean).join(' — ');
   $('lista').append(d);
