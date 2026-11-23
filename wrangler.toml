@@ -20,6 +20,8 @@ bucket_name = "ns-convites"
 
 [vars]
 LIBERAR_SEM_PAGAMENTO = "0"
+# Gateway Pix da NSMusic (NSNexus Pay). A chave fica no segredo NSNEXUS_GATEWAY_API_KEY.
+NSNEXUS_GATEWAY_URL = "https://nsmusic.ia.br"
 # Remetente dos e-mails (domínio verificado no Resend)
 EMAIL_REMETENTE = "NS Convites <convites@nsnexus.com.br>"
 # Endereço público do site, usado nos links dos e-mails
@@ -32,3 +34,4 @@ SITE_URL = "https://convites.nsnexus.com.br"
 #   npx wrangler pages secret put ADMIN_SENHA
 #   npx wrangler pages secret put RESEND_API_KEY
 #   npx wrangler pages secret put WEBHOOK_SECRET
+#   npx wrangler pages secret put NSNEXUS_GATEWAY_API_KEY   (= GATEWAY_API_KEY do projeto nsmusic)
