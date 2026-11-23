@@ -1,125 +1,87 @@
-# NSConvites
+# NS Convites
 
-Plataforma de casamento (site do casal, convites digitais, RSVP, lista de
-presentes e marketplace de fornecedores). Stack: Next.js 16 (App Router) +
-Firebase. O plano completo de produto e arquitetura está no artefato
-publicado na conversa — este README cobre o setup e o estado real do código.
+Convites em vídeo com a foto do aniversariante encaixada na moldura final de cada modelo.
+Site estático + Cloudflare Pages Functions + Supabase.
 
-## O que já funciona (testado nos emuladores, ponta a ponta)
+## Como a foto entra no vídeo
 
-- **Contas**: cadastro/login por e-mail+senha e Google, sessão em cookie httpOnly.
-- **Site do casal**: 4 templates, seções ligáveis, conteúdo editável, publicar/despublicar, ISR.
-- **Convidados**: adicionar, colar lista (CSV informal), link de convite assinado, botão "Compartilhar" que abre o WhatsApp do navegador (`wa.me`) — nenhuma API paga.
-- **RSVP público**: sem conta, via token no link; grava confirmação, recado e atualiza os contadores do casal.
-- **Lista de presentes**: catálogo (simbólico/cotas/valor livre), checkout, Pix "copia e cola", carteira (disponível/em processamento/sacado/bloqueado), saque, extrato.
-- **Checklist e orçamento**: CRUD simples.
-- **Marketplace**: cadastro de fornecedor, aprovação no backoffice (`/admin`), busca por categoria×cidade (landing de SEO), perfil público, envio de lead com contato mascarado até o fornecedor responder.
+Cada modelo termina numa moldura branca. Quando você envia um vídeo pelo admin, o navegador
+acha essa moldura no último quadro e volta quadro a quadro acompanhando ela; onde ela some
+é o momento em que a foto começa. As posições ficam salvas no Supabase (tabela `modelos`).
+No navegador, `public/assets/js/compositor.js` desenha o vídeo num canvas (WebGL) e
+coloca a foto nos pixels brancos da moldura. Confete, pétalas e brilhos que passam
+por cima continuam aparecendo na frente da foto.
 
-## O que é simulado de propósito (fase 2 do plano)
-
-Não existe gateway de pagamento real conectado — **nenhuma cobrança de verdade acontece**.
-`src/server/payments/dev-provider.ts` gera um Pix de mentira; a tela do pedido
-tem um botão "Simular pagamento" que chama `POST /api/dev/simulate-payment/[orderId]`,
-o qual roda a **mesma** função (`confirmOrderPaid`) que um webhook real do
-Pagar.me chamaria. Trocar para o gateway real é implementar
-`src/server/payments/pagarme-provider.ts` (já esqueletado) — o resto do fluxo
-(reserva de cota, ledger, carteira, saque) não muda.
-
-## O que exige credenciais suas (não dá para provisionar por código)
-
-- **Projeto Firebase real** (console.firebase.google.com) — para sair do emulador.
-- **Conta no gateway de pagamento** (Pagar.me ou similar) com CNPJ e KYC — para receber dinheiro de verdade.
-- **Domínio próprio**, se quiser sair de um subdomínio.
-
-## Setup local
-
-1. **Instalar dependências**
-
-   ```bash
-   npm install
-   npm --prefix functions install
-   ```
-
-2. **Java 21+** — os emuladores de Firestore/Storage exigem. Confira com `java -version`;
-   se for menor que 21, instale o Temurin 21 (`winget install EclipseAdoptium.Temurin.21.JDK`).
-
-3. **Variáveis de ambiente**
-
-   ```bash
-   cp .env.local.example .env.local
-   ```
-
-   Para rodar só nos emuladores, os valores podem ser fictícios — só precisam
-   existir (o schema em `src/lib/env.ts`/`env.server.ts` valida presença, não
-   autenticidade). `NEXT_PUBLIC_USE_FIREBASE_EMULATORS=true` já direciona tudo
-   para local. Para produção, preencha com as chaves reais do projeto Firebase
-   (Configurações do projeto → Geral para o client SDK; Contas de serviço →
-   Gerar nova chave privada para o Admin SDK).
-
-4. **Subir os emuladores** (Auth, Firestore, Storage — UI em `http://localhost:4000`)
-
-   ```bash
-   npm run emulators
-   ```
-
-5. **Rodar o Next.js**, em outro terminal
-
-   ```bash
-   npm run dev
-   ```
-
-   App em `http://localhost:3000`. Fluxo pra testar tudo: `/cadastro` → criar
-   casamento em `/painel` → `/painel/[id]/convidados` (adicionar convidado) →
-   `/painel/[id]/site` (marcar seções, publicar) → `/painel/[id]/presentes`
-   (cadastrar um presente) → abrir `/c/[slug]`, confirmar RSVP pelo link do
-   convidado, presentear e clicar em "Simular pagamento".
-
-## Cloud Functions
-
-```bash
-npm run functions:build      # compila TypeScript -> functions/lib
-npm run functions:deploy     # deploy real (não roda no emulador)
-```
-
-`npm run emulators` já builda e serve as functions localmente. Duas funções
-agendadas: `dailyReminderSweep` (stub, fase 1) e `releaseExpiredGiftHolds`
-(libera cotas de presente reservadas por pedido nunca pago, a cada 5 min).
+Nada é renderizado no servidor: o convite é montado no celular do convidado, então
+não há custo por convite nem fila de renderização.
 
 ## Estrutura
 
 ```
-src/
-  app/
-    (public)/c/[slug]/          site do casal — SSR + Admin SDK + ISR
-    (public)/c/[slug]/presentear/[giftId]/(pedido/[orderId])  checkout de presente
-    (public)/fornecedores/...   marketplace — busca e landing de SEO
-    (public)/v/[slug]/          perfil público do fornecedor + lead
-    (couple)/painel/[coupleId]/ site, convidados, presentes, checklist, orçamento
-    (vendor)/fornecedor/        cadastro, dashboard de leads, perfil
-    (admin)/admin/              moderação de fornecedores
-    api/auth/session/           troca ID token por cookie de sessão httpOnly
-    api/webhooks/[provider]/    webhooks de pagamento (fase 2, contrato pronto)
-    api/dev/simulate-payment/   só em dev — dispara confirmOrderPaid manualmente
-  server/
-    repositories/                único lugar que fala com o Firestore
-    auth/                        sessão, guards de autorização, token de convite (HMAC)
-    payments/                    provider.ts (contrato), dev-provider.ts, pagarme-provider.ts (stub), confirm-order.ts
-  lib/
-    firebase-client.ts / firebase-admin.ts
-    env.ts / env.server.ts       validação de variáveis de ambiente com zod
-    schemas/                     validação de input com zod
-functions/                       Cloud Functions v2
-firestore.rules / firestore.indexes.json / storage.rules
+public/                 site (Cloudflare Pages)
+  index.html            página de vendas + vitrine
+  criar.html            montagem do convite (rota /criar)
+  convite.html          convite do cliente (rota /c/<slug>)
+  painel.html           confirmações de presença (rota /painel?c=<slug>&k=<token>)
+  admin.html            sua área: pedidos, especiais, modelos, categorias (rota /admin)
+  modelos/              os 17 vídeos iniciais e modelos.json (reserva se a API falhar)
+  assets/js/config.js   WhatsApp, preços e URL do checkout
+functions/api/          API (Pages Functions)
+  convites/index.js     POST: cria pedido, envia foto ao Supabase Storage
+  convites/[slug].js    GET: dados do convite (só se pago)
+  rsvp.js               POST: confirmação de presença
+  painel.js             GET: lista de confirmações (com token)
+  modelos.js            GET: vitrine (categorias e modelos ativos)
+  especial/[token].js   GET: dados de um pedido especial
+  admin/*               API do admin (exige login)
+  pagamento/webhook.js  POST: marca convite como pago (ligar ao gateway da NSMusic)
+supabase/schema.sql     tabelas + buckets fotos e modelos
+supabase/seed_modelos.sql  cadastra as 4 categorias e os 17 modelos iniciais
+tools/adicionar_modelo.py  alternativa por linha de comando (opcional)
 ```
 
-**Regra que vale para todo código novo**: nenhum componente ou route handler
-importa `firebase-admin` diretamente — sempre por um repositório em
-`src/server/repositories`. Isso é o que mantém a porta aberta para migrar o
-financeiro para Postgres mais tarde sem reescrever a aplicação.
+## Subir pela primeira vez
 
-## Próximos passos reais
+1. **Supabase**: crie o projeto, abra o SQL Editor e rode `supabase/schema.sql` e depois `supabase/seed_modelos.sql`.
+2. **Git**: crie o repositório no GitHub e envie este código:
+   ```
+   git remote add origin git@github.com:SEU-USUARIO/ns-convites.git
+   git push -u origin main
+   ```
+3. **Cloudflare Pages**: Workers & Pages → Create → Pages → conectar ao repositório.
+   - Build command: *(vazio)*
+   - Output directory: `public`
+4. Em Settings → Variables and Secrets do projeto:
+   - `SUPABASE_URL` = `https://SEU-PROJETO.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` = service role (secreta)
+   - `WEBHOOK_SECRET` = qualquer texto longo (secreta)
+   - `ADMIN_SENHA` = a senha para entrar em /admin (secreta)
+   - `LIBERAR_SEM_PAGAMENTO` = `1` enquanto testa, `0` em produção
+5. Edite `public/assets/js/config.js` com o número de WhatsApp e, quando estiver pronto,
+   a URL do checkout (o id do pedido vai no final da URL).
 
-- Ligar `PagarmeProvider` (ou equivalente) quando houver conta no gateway.
-- Página de importação de convidados por upload de arquivo `.csv` (hoje é por colagem de texto).
-- Templates de site com upload de foto (galeria) — Storage já tem regra pronta, falta a tela.
-- Busca com Typesense/Algolia quando o catálogo de fornecedores crescer (hoje é filtro direto no Firestore, que aguenta bem o volume de uma praça só).
+Teste local: copie `.dev.vars.example` para `.dev.vars` e rode `npx wrangler pages dev public`.
+Convite de demonstração, sem banco: `/c/exemplo`.
+
+## Área do admin (/admin)
+
+- **Pedidos**: todos os convites, com status, link do convite, link das confirmações e botão
+  para mandar tudo ao cliente no WhatsApp. Pedido com música personalizada tem um campo
+  para colar o link do MP3.
+- **Especiais**: pedidos combinados por fora, com valor próprio e sem adicionais. Gera um link
+  `/criar?pedido=...` para o cliente montar o convite; você pode prender um modelo
+  (inclusive exclusivo) ou deixar o cliente escolher na vitrine.
+- **Modelos**: envie um vídeo, confira a prévia com a foto e publique. Se a moldura não for
+  achada, ajuste a sensibilidade ou marque a moldura arrastando sobre a prévia. Dá para
+  esconder da vitrine, marcar como exclusivo, trocar nome e categoria.
+- **Categorias**: criar, renomear, ordenar, esconder. Categoria sem modelo não aparece no site.
+
+Requisitos do vídeo: vertical 9:16, 24 fps, terminando numa moldura **branca pura** parada
+por pelo menos 2 segundos.
+
+## Pagamento
+
+O pedido é salvo como `aguardando_pagamento`. Quando o gateway confirmar, ele deve chamar
+`POST /api/pagamento/webhook` com o header `x-webhook-secret` e o corpo
+`{"referencia": "<id do convite>", "status": "pago"}`. Ajuste o arquivo ao formato real do
+seu gateway.

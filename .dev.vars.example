@@ -1,0 +1,5 @@
+SUPABASE_URL=https://SEU-PROJETO.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=coloque-a-service-role-aqui
+ADMIN_SENHA=troque-esta-senha
+WEBHOOK_SECRET=um-segredo-qualquer
+LIBERAR_SEM_PAGAMENTO=1

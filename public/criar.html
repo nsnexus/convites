@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Criar convite | NS Convites</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/site.css">
+<style>
+.criar{display:grid;grid-template-columns:380px 1fr;gap:64px;padding:32px 0 96px;align-items:start}
+.criar .lado{position:sticky;top:88px}
+.criar .celular{width:min(320px,78vw)}
+.criar h1{font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:8px}
+.bloco{padding:28px 0;border-top:1px solid var(--linha)}
+.bloco h2{font-size:1.5rem;margin-bottom:18px}
+.modelo-atual{display:flex;gap:14px;align-items:center}
+.modelo-atual img{width:56px;height:100px;object-fit:cover;border-radius:10px}
+.modelo-atual select{flex:1}
+.envio{display:flex;flex-direction:column;align-items:flex-start;gap:16px}
+.envio label.bt{cursor:pointer}
+.ajustes{display:grid;gap:10px;width:100%;max-width:420px}
+.ajustes label{display:grid;grid-template-columns:90px 1fr;align-items:center;font-size:.92rem;font-weight:500}
+
+.opcao{display:flex;gap:14px;align-items:flex-start;padding:16px;border-radius:var(--raio-p);border:1.5px solid var(--linha);background:#fff;cursor:pointer}
+.opcao:has(input:checked){border-color:var(--festa)}
+.opcao input{margin-top:5px;accent-color:var(--festa);width:18px;height:18px}
+.opcao span{display:block;color:var(--tinta-2);font-size:.9rem}
+.resumo{position:sticky;bottom:0;background:var(--papel);padding:18px 0;border-top:1px solid var(--linha);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.resumo .total{font:800 1.8rem var(--disp)}
+.resumo small{display:block;color:var(--tinta-2)}
+.especial{background:var(--tinta);color:#fff;border-radius:20px;padding:18px 20px;margin:20px 0 8px}
+.especial p{color:#CDBFD6;margin-top:4px;white-space:pre-line}
+.pronto{text-align:center;padding:80px 0;max-width:560px;margin:auto}
+.pronto p{color:var(--tinta-2);margin:16px 0 28px}
+.mini-acoes{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.mini-acoes button{font:600 .88rem var(--corpo);border:0;background:var(--lilas);border-radius:999px;padding:.5em 1em;cursor:pointer}
+@media (max-width:900px){.criar{grid-template-columns:1fr;gap:24px}.criar .lado{position:static}}
+</style>
+</head>
+<body>
+<header class="topo"><div class="cont"><a class="marca" href="/">ns<b>.</b>convites</a><nav><a href="/#modelos">Ver modelos</a></nav></div></header>
+
+<main class="cont">
+<div class="criar" id="criar">
+  <div class="lado">
+    <div class="celular"><canvas id="cv" aria-label="Prévia do seu convite"></canvas><video id="vd" class="vid-oculto" muted playsinline crossorigin="anonymous" preload="auto"></video></div>
+    <div class="mini-acoes"><button type="button" id="verFinal">Ver a foto na moldura</button><button type="button" id="verInicio">Ver do início</button></div>
+  </div>
+
+  <form id="form" novalidate>
+    <h1>Monte seu convite</h1>
+    <p style="color:var(--tinta-2)">A prévia ao lado muda enquanto você preenche.</p>
+
+    <div class="especial" id="especialInfo" hidden><strong>Pedido especial</strong><p id="especialDesc"></p></div>
+
+    <div class="bloco">
+      <h2>Modelo</h2>
+      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo" style="flex:1;margin:0"><label for="modelo">Tema escolhido</label><select id="modelo" name="modelo"></select></div></div>
+    </div>
+
+    <div class="bloco">
+      <h2>Foto</h2>
+      <div class="envio">
+        <label class="bt bt-linha">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
+        <span class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem">Prefira foto vertical, com o rosto bem iluminado.</span>
+        <div class="ajustes" id="ajustes" hidden>
+          <label>Aproximar<input type="range" id="zoom" min="1" max="2.5" step=".01" value="1"></label>
+          <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
+          <label>Vertical<input type="range" id="py" min="0" max="1" step=".01" value=".5"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Festa</h2>
+      <div class="duas">
+        <div class="campo"><label for="homenageado">Nome de quem faz a festa</label><input id="homenageado" name="homenageado" required autocomplete="off"></div>
+        <div class="campo"><label for="idade">Idade que vai completar</label><input id="idade" name="idade" inputmode="numeric" maxlength="3"></div>
+      </div>
+      <div class="campo"><label for="titulo">Título do convite</label><input id="titulo" name="titulo" placeholder="Ex.: Os 15 anos da Laura"><span class="ajuda">Se deixar em branco, usamos o nome e a idade.</span></div>
+      <div class="duas">
+        <div class="campo"><label for="data">Data</label><input type="date" id="data" name="data" required></div>
+        <div class="campo"><label for="hora">Horário</label><input type="time" id="hora" name="hora" required></div>
+      </div>
+      <div class="campo"><label for="local">Nome do local</label><input id="local" name="local" placeholder="Ex.: Espaço Jardim das Flores" required></div>
+      <div class="campo"><label for="endereco">Endereço</label><input id="endereco" name="endereco" placeholder="Rua, número, bairro, cidade" required></div>
+      <div class="campo"><label for="recado">Recado para os convidados</label><textarea id="recado" name="recado" maxlength="400" placeholder="Ex.: Venha celebrar comigo esse dia tão especial!"></textarea></div>
+      <div class="campo"><label for="presentes">Sugestões de presente</label><textarea id="presentes" name="presentes" placeholder="Uma por linha. Ex.: Roupa tamanho 4"></textarea><span class="ajuda">Opcional. O convidado pode marcar qual vai levar.</span></div>
+    </div>
+
+    <div class="bloco" id="blocoMusica">
+      <h2>Música</h2>
+      <div style="display:grid;gap:10px">
+        <label class="opcao"><input type="radio" name="musica" value="modelo" checked><div><strong>Trilha do modelo</strong><span>Incluída no valor.</span></div></label>
+        <label class="opcao"><input type="radio" name="musica" value="personalizada"><div><strong>Música personalizada, + R$ 10</strong><span>Feita com o nome do aniversariante. Combinamos os detalhes pelo WhatsApp.</span></div></label>
+      </div>
+    </div>
+
+    <div class="bloco">
+      <h2>Seus dados</h2>
+      <p style="color:var(--tinta-2);margin:-8px 0 18px;font-size:.95rem">Para enviar o link do convite e o acesso às confirmações.</p>
+      <div class="campo"><label for="cliente">Seu nome</label><input id="cliente" name="cliente" autocomplete="name" required></div>
+      <div class="duas">
+        <div class="campo"><label for="whatsapp">WhatsApp</label><input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" required></div>
+        <div class="campo"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="email"></div>
+      </div>
+    </div>
+
+    <p class="erro" id="erro" role="alert" hidden></p>
+    <div class="resumo">
+      <div><small>Total</small><span class="total" id="total">R$ 39,90</span></div>
+      <button class="bt bt-festa" id="enviar" type="submit">Ir para o pagamento</button>
+    </div>
+  </form>
+</div>
+
+<div class="pronto" id="pronto" hidden>
+  <h1 style="font-size:2.6rem">Pedido recebido</h1>
+  <p id="prontoTexto">Assim que o pagamento for confirmado, o link do convite chega no seu WhatsApp.</p>
+  <a class="bt bt-festa" id="prontoLink" href="#">Abrir convite</a>
+</div>
+</main>
+
+<script type="module" src="/assets/js/criar.js"></script>
+</body>
+</html>

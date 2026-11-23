@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin | NS Convites</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/site.css">
+<link rel="stylesheet" href="/assets/css/admin.css">
+</head>
+<body>
+
+<section id="telaLogin" class="login" hidden>
+  <form id="formLogin" class="login-caixa">
+    <a class="marca" href="/">ns<b>.</b>convites</a>
+    <div class="campo"><label for="senha">Senha do admin</label><input type="password" id="senha" autocomplete="current-password" required></div>
+    <p class="erro" id="erroLogin" hidden></p>
+    <button class="bt bt-festa">Entrar</button>
+  </form>
+</section>
+
+<div id="telaAdmin" hidden>
+  <header class="topo"><div class="cont">
+    <a class="marca" href="/">ns<b>.</b>convites</a>
+    <nav class="abas-adm" role="tablist">
+      <button role="tab" data-aba="pedidos" aria-selected="true">Pedidos</button>
+      <button role="tab" data-aba="especiais">Especiais</button>
+      <button role="tab" data-aba="modelos">Modelos</button>
+      <button role="tab" data-aba="categorias">Categorias</button>
+    </nav>
+    <button class="sair" id="sair">Sair</button>
+  </div></header>
+
+  <main class="cont adm">
+    <!-- PEDIDOS -->
+    <section data-painel="pedidos">
+      <div class="cab"><h1>Pedidos</h1>
+        <select id="filtroPedidos" aria-label="Filtrar por status">
+          <option value="">Todos</option><option value="aguardando_pagamento">Aguardando pagamento</option><option value="pago">Pagos</option><option value="publicado">Publicados</option><option value="cancelado">Cancelados</option>
+        </select>
+      </div>
+      <div id="listaPedidos" class="lista"></div>
+    </section>
+
+    <!-- ESPECIAIS -->
+    <section data-painel="especiais" hidden>
+      <div class="cab"><h1>Pedidos especiais</h1><button class="bt bt-festa" id="novoEspecial">Novo pedido especial</button></div>
+      <p class="nota">Para o que foi combinado fora da tabela: valor próprio, sem os adicionais. Você manda o link e o cliente monta o convite com o modelo que você escolher (pode ser um exclusivo).</p>
+      <form id="formEspecial" class="cartao-adm" hidden>
+        <div class="duas">
+          <div class="campo"><label for="espCliente">Cliente</label><input id="espCliente" required></div>
+          <div class="campo"><label for="espZap">WhatsApp</label><input id="espZap" type="tel" placeholder="(00) 00000-0000"></div>
+        </div>
+        <div class="campo"><label for="espDesc">O que foi combinado</label><textarea id="espDesc" required placeholder="Ex.: Convite exclusivo tema Frozen + música personalizada + 2 versões"></textarea></div>
+        <div class="duas">
+          <div class="campo"><label for="espValor">Valor total (R$)</label><input id="espValor" inputmode="decimal" placeholder="129,90" required></div>
+          <div class="campo"><label for="espModelo">Modelo</label><select id="espModelo"><option value="">Cliente escolhe na vitrine</option></select><span class="ajuda">Se o vídeo exclusivo ainda não estiver pronto, deixe em branco e escolha depois.</span></div>
+        </div>
+        <div class="campo"><label for="espObs">Observações internas</label><input id="espObs"></div>
+        <p class="erro" id="erroEspecial" hidden></p>
+        <div class="linha-bts"><button class="bt bt-festa">Criar e gerar link</button><button type="button" class="bt bt-linha" id="cancelarEspecial">Cancelar</button></div>
+      </form>
+      <div id="listaEspeciais" class="lista"></div>
+    </section>
+
+    <!-- MODELOS -->
+    <section data-painel="modelos" hidden>
+      <div class="cab"><h1>Modelos</h1><button class="bt bt-festa" id="novoModelo">Enviar vídeo novo</button></div>
+
+      <div id="editor" class="cartao-adm editor" hidden>
+        <div class="ed-prev">
+          <div class="celular"><canvas id="edCanvas"></canvas><canvas id="edMarcar" class="marcar" hidden></canvas><video id="edVideo" class="vid-oculto" muted playsinline loop preload="auto"></video></div>
+          <div class="mini-acoes"><button type="button" id="edVerFoto">Ver a foto</button><button type="button" id="edDoInicio">Do início</button></div>
+        </div>
+        <div class="ed-form">
+          <h2>Vídeo novo</h2>
+          <div class="campo">
+            <label class="bt bt-linha" style="width:max-content">Escolher vídeo<input type="file" id="edArquivo" accept="video/mp4,video/quicktime,video/webm" hidden></label>
+            <span class="ajuda" id="edInfo">Vertical 9:16, terminando numa moldura branca parada por uns 2 segundos.</span>
+          </div>
+          <div class="campo"><label for="edNome">Nome</label><input id="edNome" placeholder="Ex.: Safari"></div>
+          <div class="duas">
+            <div class="campo"><label for="edCat">Categoria</label><select id="edCat"></select></div>
+            <div class="campo"><label for="edForma">Formato da moldura</label><select id="edForma"><option value="retangulo">Retângulo</option><option value="circulo">Círculo</option></select></div>
+          </div>
+          <label class="check"><input type="checkbox" id="edExclusivo"> Exclusivo (não aparece na vitrine, só em pedido especial)</label>
+          <label class="check"><input type="checkbox" id="edChave" checked> Confete e pétalas passam por cima da foto</label>
+
+          <div id="edDeteccao" hidden>
+            <div class="status-det" id="edStatus"></div>
+            <div class="barra" id="edBarra" hidden><span></span></div>
+            <div class="campo" id="edCampoInicio" hidden>
+              <label for="edInicio">Começar a foto em <b id="edInicioTxt"></b></label>
+              <input type="range" id="edInicio" min="0" max="10" step="0.04">
+            </div>
+            <details class="avancado"><summary>A moldura não ficou certa?</summary>
+              <p class="nota">Mexa na sensibilidade e detecte de novo. Papel creme: branco mínimo 235–240. Muito confete ou pétala: tolerância de cor 40+.</p>
+              <div class="duas">
+                <div class="campo"><label for="edLimiar">Branco mínimo <b id="edLimiarTxt">225</b></label><input type="range" id="edLimiar" min="150" max="250" value="225"></div>
+                <div class="campo"><label for="edSat">Tolerância de cor <b id="edSatTxt">18</b></label><input type="range" id="edSat" min="5" max="80" value="18"></div>
+              </div>
+              <label class="check"><input type="checkbox" id="edFechar" checked> Juntar falhas pequenas na moldura</label>
+              <div class="linha-bts"><button type="button" class="bt bt-linha" id="edDetectar">Detectar de novo</button><button type="button" class="bt bt-linha" id="edManual">Marcar moldura na mão</button></div>
+              <p class="nota" id="edManualAjuda" hidden>Arraste sobre a prévia, do canto de cima ao canto de baixo da moldura branca. A foto fica parada nesse lugar a partir do tempo escolhido.</p>
+            </details>
+          </div>
+          <p class="erro" id="edErro" hidden></p>
+          <div class="linha-bts"><button type="button" class="bt bt-festa" id="edPublicar" disabled>Publicar modelo</button><button type="button" class="bt bt-linha" id="edFecharBt">Cancelar</button></div>
+        </div>
+      </div>
+
+      <div id="gradeModelos" class="grade-adm"></div>
+    </section>
+
+    <!-- CATEGORIAS -->
+    <section data-painel="categorias" hidden>
+      <div class="cab"><h1>Categorias</h1></div>
+      <form id="formCat" class="linha-nova"><input id="novaCat" placeholder="Nome da nova categoria, ex.: Batizado" required><button class="bt bt-festa">Adicionar</button></form>
+      <p class="nota">Categoria sem nenhum modelo ativo não aparece na vitrine.</p>
+      <div id="listaCats" class="lista"></div>
+    </section>
+  </main>
+</div>
+
+<div class="aviso" id="aviso" role="status" hidden></div>
+<script type="module" src="/assets/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirmações | NS Convites</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/site.css">
+<style>
+main{padding:40px 0 80px;max-width:720px}
+.numeros{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:28px 0}
+.numeros div{background:#fff;border-radius:16px;padding:18px}
+.numeros b{font:800 2.2rem/1 var(--disp);display:block}
+.numeros span{color:var(--tinta-2);font-size:.9rem}
+.lista{display:grid;gap:8px}
+.item{background:#fff;border-radius:14px;padding:14px 18px}
+.item strong{font-weight:600}
+.item .st{float:right;font-size:.85rem;font-weight:600}
+.item .st.sim{color:var(--verde)} .item .st.nao{color:var(--festa-esc)}
+.item p{color:var(--tinta-2);font-size:.92rem;margin-top:4px}
+</style>
+</head>
+<body>
+<header class="topo"><div class="cont"><a class="marca" href="/">ns<b>.</b>convites</a></div></header>
+<main class="cont">
+  <h1 id="titulo" style="font-size:2.4rem">Carregando…</h1>
+  <p id="sub" style="color:var(--tinta-2)"></p>
+  <div class="numeros" id="numeros" hidden>
+    <div><b id="nVao">0</b><span>pessoas confirmadas</span></div>
+    <div><b id="nResp">0</b><span>respostas</span></div>
+    <div><b id="nNao">0</b><span>não vão</span></div>
+  </div>
+  <div class="lista" id="lista"></div>
+</main>
+<script type="module">
+const $ = id => document.getElementById(id), q = new URLSearchParams(location.search);
+const r = await fetch(`/api/painel?c=${q.get('c')}&k=${q.get('k')}`), j = await r.json();
+if (!r.ok) { $('titulo').textContent = j.erro || 'Não foi possível abrir o painel.'; throw 0; }
+const c = j.convite, l = j.confirmacoes;
+$('titulo').textContent = c.titulo || c.homenageado;
+$('sub').innerHTML = `Link do convite: <a href="/c/${c.slug}">${location.host}/c/${c.slug}</a>`;
+$('numeros').hidden = false;
+$('nVao').textContent = l.filter(x => x.vai).reduce((s, x) => s + x.pessoas, 0);
+$('nResp').textContent = l.length; $('nNao').textContent = l.filter(x => !x.vai).length;
+if (!l.length) $('lista').innerHTML = '<p style="color:var(--tinta-2)">Ninguém respondeu ainda. Compartilhe o link do convite no WhatsApp.</p>';
+l.forEach(x => {
+  const d = document.createElement('div'); d.className = 'item';
+  d.innerHTML = `<span class="st ${x.vai ? 'sim' : 'nao'}"></span><strong></strong><p></p>`;
+  d.querySelector('.st').textContent = x.vai ? `Vai · ${x.pessoas} ${x.pessoas > 1 ? 'pessoas' : 'pessoa'}` : 'Não vai';
+  d.querySelector('strong').textContent = x.nome;
+  d.querySelector('p').textContent = [x.presente && `Presente: ${x.presente}`, x.recado].filter(Boolean).join(' — ');
+  $('lista').append(d);
+});
+</script>
+</body>
+</html>

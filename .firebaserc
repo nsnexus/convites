@@ -1,8 +1,0 @@
-{
-  "projects": {
-    "default": "nsconvites-dev",
-    "dev": "nsconvites-dev",
-    "staging": "nsconvites-staging",
-    "prod": "nsconvites-prod"
-  }
-}

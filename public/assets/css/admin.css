@@ -1,0 +1,53 @@
+.login{min-height:100svh;display:grid;place-items:center;padding:20px}
+.login-caixa{width:min(360px,100%);display:grid;gap:20px}
+.login-caixa .marca{font-size:1.8rem}
+.abas-adm{display:flex;gap:4px;overflow-x:auto}
+.abas-adm button{font:600 .95rem var(--corpo);border:0;background:none;padding:.55em .9em;border-radius:999px;cursor:pointer;color:var(--tinta-2);white-space:nowrap}
+.abas-adm button[aria-selected=true]{background:var(--tinta);color:#fff}
+.sair{border:0;background:none;font:500 .9rem var(--corpo);color:var(--tinta-2);cursor:pointer}
+@media (max-width:720px){.topo .cont{height:auto;flex-wrap:wrap;padding:10px 0;gap:8px}.abas-adm{order:3;width:100%}}
+.adm{padding:32px 0 96px}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.cab h1{font-size:2.2rem}
+.cab select{font:inherit;padding:.6em .9em;border-radius:var(--raio-p);border:1.5px solid var(--linha);background:#fff}
+.nota{color:var(--tinta-2);font-size:.92rem;max-width:68ch;margin-bottom:18px}
+.lista{display:grid;gap:8px}
+.item-adm{background:#fff;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center}
+.item-adm h3{font-size:1.1rem}
+.item-adm .meta{color:var(--tinta-2);font-size:.88rem}
+.item-adm .acoes{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
+.item-adm select,.item-adm input{font:inherit;font-size:.9rem;padding:.45em .7em;border-radius:10px;border:1.5px solid var(--linha);background:#fff}
+.chip{font:600 .82rem var(--corpo);border:0;background:var(--lilas);color:var(--tinta);border-radius:999px;padding:.5em .9em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.chip:hover{background:var(--linha)}
+.chip.perigo{background:#FFE4EC;color:var(--festa-esc)}
+.st{font:600 .8rem var(--corpo);padding:.3em .7em;border-radius:999px;background:var(--lilas)}
+.st-pago,.st-publicado,.st-concluido{background:#DDF5EC;color:var(--verde)}
+.st-aguardando_pagamento,.st-aberto{background:#FFF3D6;color:#8A5A00}
+.st-cancelado{background:#FFE4EC;color:var(--festa-esc)}
+.valor-adm{font:800 1.2rem var(--disp)}
+.cartao-adm{background:#fff;border-radius:24px;padding:24px;margin-bottom:24px}
+.linha-bts{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.linha-nova{display:flex;gap:10px;margin-bottom:12px}
+.linha-nova input{flex:1;font:inherit;padding:.8em 1em;border-radius:var(--raio-p);border:1.5px solid var(--linha)}
+.check{display:flex;gap:10px;align-items:center;margin:8px 0;font-size:.95rem;cursor:pointer}
+.check input{accent-color:var(--festa);width:18px;height:18px}
+.grade-adm{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.cartao-mod{background:#fff;border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.cartao-mod.inativo{opacity:.55}
+.cartao-mod img{aspect-ratio:9/16;object-fit:cover;width:100%}
+.cartao-mod .corpo{padding:12px;display:grid;gap:8px}
+.cartao-mod input,.cartao-mod select{font:inherit;font-size:.88rem;padding:.4em .6em;border-radius:8px;border:1.5px solid var(--linha);width:100%;background:#fff}
+.cartao-mod .tags{display:flex;gap:6px;flex-wrap:wrap}
+.editor{display:grid;grid-template-columns:auto 1fr;gap:36px}
+.editor .celular{width:min(300px,76vw)}
+.editor h2{font-size:1.6rem;margin-bottom:16px}
+.marcar{position:absolute;inset:10px;width:calc(100% - 20px)!important;height:calc(100% - 20px)!important;border-radius:34px;cursor:crosshair;touch-action:none}
+.mini-acoes{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.mini-acoes button{font:600 .88rem var(--corpo);border:0;background:var(--lilas);border-radius:999px;padding:.5em 1em;cursor:pointer}
+.status-det{font-weight:600;margin:14px 0 8px}
+.barra{height:8px;border-radius:99px;background:var(--lilas);overflow:hidden;margin-bottom:14px}
+.barra span{display:block;height:100%;width:0;background:var(--festa);transition:width .2s}
+.avancado{margin:8px 0 18px}
+.avancado summary{cursor:pointer;font-weight:600;color:var(--festa-esc);margin-bottom:10px}
+@media (max-width:820px){.editor{grid-template-columns:1fr}}
+.aviso{position:fixed;bottom:20px;left:50%;translate:-50% 0;background:var(--tinta);color:#fff;padding:.8em 1.3em;border-radius:999px;font-weight:500;z-index:50;max-width:92vw}

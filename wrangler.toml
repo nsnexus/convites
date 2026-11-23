@@ -1,0 +1,11 @@
+name = "ns-convites"
+pages_build_output_dir = "public"
+compatibility_date = "2026-11-01"
+
+# Segredos (não coloque aqui): configure no painel da Cloudflare ou com
+#   npx wrangler pages secret put SUPABASE_SERVICE_ROLE_KEY
+#   npx wrangler pages secret put WEBHOOK_SECRET
+#   npx wrangler pages secret put ADMIN_SENHA
+[vars]
+SUPABASE_URL = "https://SEU-PROJETO.supabase.co"
+LIBERAR_SEM_PAGAMENTO = "0"
