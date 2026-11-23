@@ -10,13 +10,14 @@
 <meta property="og:image" content="/modelos/c9803844.jpg">
 <meta name="theme-color" content="#FBF8FF">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/css/site.css?v=20261123-campos">
+<link rel="stylesheet" href="/assets/css/site.css?v=20261123-galeria">
 </head>
 <body>
 <header class="topo">
   <div class="cont">
     <a class="marca" href="/">ns<b>.</b>convites</a>
     <nav>
+      <a href="#modelos">Modelos</a>
       <a href="#como-funciona">Como funciona</a>
       <a href="#precos">Preços</a>
       <a href="/conta">Meus convites</a>
@@ -49,6 +50,17 @@
         <small>A foto fica só no seu aparelho. Nada é enviado.</small>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="secao galeria" id="modelos" aria-labelledby="tituloModelos">
+  <div class="cont">
+    <div class="galeria-cab"><div><h2 id="tituloModelos">Encontre o seu convite</h2><p>Filtre por categoria e deslize para ver os modelos.</p></div>
+      <div class="galeria-setas"><button type="button" id="modelosAntes" aria-label="Ver modelos anteriores">←</button><button type="button" id="modelosDepois" aria-label="Ver próximos modelos">→</button></div>
+    </div>
+    <div class="galeria-filtros" id="filtrosModelos" role="group" aria-label="Filtrar modelos por categoria"></div>
+    <p id="modelosResumo" class="galeria-resumo" aria-live="polite"></p>
+    <div class="galeria-trilho" id="galeriaModelos" role="region" aria-label="Galeria de modelos" tabindex="0"></div>
   </div>
 </section>
 
@@ -122,6 +134,6 @@
 </footer>
 
 <script type="module" src="/assets/js/config.js"></script>
-<script type="module" src="/assets/js/landing.js?v=20261123-sem-vitrine"></script>
+<script type="module" src="/assets/js/landing.js?v=20261123-galeria"></script>
 </body>
 </html>

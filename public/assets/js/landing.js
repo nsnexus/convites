@@ -12,7 +12,8 @@ if (salva) foto = await carregarImg(salva);
 function carregarImg(src) { return new Promise(ok => { const i = new Image(); i.onload = () => ok(i); i.src = src; }); }
 
 // ---------- prévia do topo ----------
-const destaque = ['c9803844', 'db978e7e', 'cbb6b11a', '77916764'].map(id => porId[id]);
+const destaque = ['c9803844', 'db978e7e', 'cbb6b11a', '77916764'].map(id => porId[id]).filter(Boolean);
+if (!destaque.length) destaque.push(...dados.modelos.slice(0, 4));
 const hv = document.getElementById('heroVid');
 let hi = 0, hero;
 try {
@@ -49,3 +50,65 @@ document.getElementById('fotoTeste').addEventListener('change', async e => {
 
 
 ligarSuporte(); ligarPrecos();
+
+const trilho = document.getElementById('galeriaModelos');
+const filtros = document.getElementById('filtrosModelos');
+const anterior = document.getElementById('modelosAntes'), proximo = document.getElementById('modelosDepois');
+const categorias = Object.fromEntries(dados.categorias.map(c => [c.id, c.nome]));
+let categoria = '', tocando = null;
+function pararPrevia() {
+  if (!tocando) return;
+  tocando.video.pause(); tocando.video.hidden = true;
+  tocando.botao.textContent = 'Ver abertura';
+  tocando.botao.setAttribute('aria-pressed', 'false');
+  tocando = null;
+}
+function setas() {
+  anterior.disabled = trilho.scrollLeft < 2;
+  proximo.disabled = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 2;
+}
+function pintarGaleria() {
+  pararPrevia(); trilho.replaceChildren();
+  const modelos = dados.modelos.filter(m => !categoria || m.categoria === categoria);
+  document.getElementById('modelosResumo').textContent = modelos.length + (modelos.length === 1 ? ' modelo' : ' modelos');
+  modelos.forEach(m => {
+    const card = document.createElement('article'); card.className = 'galeria-card';
+    const media = document.createElement('div'); media.className = 'galeria-media';
+    const img = Object.assign(document.createElement('img'), { src: m.poster, alt: m.nome, loading: 'lazy', decoding: 'async' });
+    const video = Object.assign(document.createElement('video'), { muted: true, playsInline: true, preload: 'none', hidden: true });
+    const play = document.createElement('button'); play.type = 'button'; play.className = 'galeria-play'; play.textContent = 'Ver abertura';
+    play.setAttribute('aria-label', 'Ver abertura: ' + m.nome); play.setAttribute('aria-pressed', 'false');
+    play.onclick = async () => {
+      if (tocando?.video === video) { pararPrevia(); return; }
+      pararPrevia(); hero && hv.pause();
+      tocando = { video, botao: play };
+      video.src ||= m.video; video.hidden = false;
+      play.textContent = 'Parar prévia'; play.setAttribute('aria-pressed', 'true');
+      try { await video.play(); } catch { if (tocando?.video === video) pararPrevia(); }
+    };
+    video.onended = () => { if (tocando?.video === video) pararPrevia(); };
+    media.append(img, video, play);
+    const texto = document.createElement('div'); texto.className = 'galeria-texto';
+    const nome = document.createElement('h3'); nome.textContent = m.nome;
+    const cat = document.createElement('p'); cat.textContent = categorias[m.categoria] || 'Convite personalizado';
+    const usar = document.createElement('a'); usar.href = '/criar?modelo=' + encodeURIComponent(m.id); usar.textContent = 'Usar este modelo';
+    texto.append(nome, cat, usar); card.append(media, texto); trilho.append(card);
+  });
+  trilho.scrollLeft = 0;
+  requestAnimationFrame(setas);
+}
+[{ id: '', nome: 'Todos' }, ...dados.categorias.filter(c => dados.modelos.some(m => m.categoria === c.id))].forEach(c => {
+  const bt = document.createElement('button'); bt.type = 'button'; bt.textContent = c.nome;
+  bt.setAttribute('aria-pressed', String(c.id === categoria));
+  bt.onclick = () => {
+    categoria = c.id;
+    filtros.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === bt)));
+    pintarGaleria();
+  };
+  filtros.append(bt);
+});
+const mover = sinal => trilho.scrollBy({ left: sinal * Math.max(160, trilho.clientWidth * .8), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+anterior.onclick = () => mover(-1); proximo.onclick = () => mover(1);
+trilho.addEventListener('scroll', setas, { passive: true });
+window.addEventListener('resize', setas);
+pintarGaleria();
