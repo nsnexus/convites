@@ -197,7 +197,8 @@ $('edArquivo').onchange = async e => {
   await new Promise((ok, er) => { edV.onloadeddata = ok; edV.onerror = () => er(); }).catch(() => { erroEd('Não consegui abrir esse vídeo. Use MP4 (H.264).'); throw 0; });
   const prop = edV.videoWidth / edV.videoHeight;
   $('edInfo').textContent = `${edV.videoWidth}×${edV.videoHeight}, ${edV.duration.toFixed(1)} s, ${(f.size / 1048576).toFixed(1)} MB` + (Math.abs(prop - 9 / 16) > .03 ? '. Atenção: o vídeo não é 9:16, vai aparecer cortado.' : '');
-  if (f.size > 45 * 1048576) erroEd('Vídeo acima de 45 MB. Exporte em 720p ou 1080p com compressão antes de enviar.');
+  if (f.size > 90 * 1048576) erroEd('Vídeo acima de 90 MB. Exporte em 720p com compressão antes de enviar.');
+  else if (f.size > 15 * 1048576) $('edInfo').textContent += '. Dica: exportar em 720p deixa o convite abrindo mais rápido.';
   ed.total = Math.floor(edV.duration * FPS);
   if (!edComp) { edComp = new Compositor($('edCanvas'), edV, modeloEd); edComp.definirFoto(fotoExemplo()); }
   modeloEd.inicio = 1e9; edV.play().catch(() => {});
@@ -279,7 +280,7 @@ mc.onpointerup = () => {
 
 function enviarArquivo(url, corpo, tipo, aoProgredir) {
   return new Promise((ok, er) => {
-    const x = new XMLHttpRequest(); x.open('PUT', url); x.setRequestHeader('content-type', tipo); x.setRequestHeader('x-upsert', 'true');
+    const x = new XMLHttpRequest(); x.open('PUT', url); x.setRequestHeader('content-type', tipo);
     x.upload.onprogress = e => e.lengthComputable && aoProgredir?.(e.loaded / e.total);
     x.onload = () => x.status < 300 ? ok() : er(new Error(`Falha no envio (${x.status}).`)); x.onerror = () => er(new Error('Falha de conexão no envio.'));
     x.send(corpo);

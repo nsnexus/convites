@@ -1,4 +1,5 @@
 import { sb, json, limpo, aleatorio } from '../../_lib/sb.js';
+import { ehNossoArquivo } from '../../_lib/arquivos.js';
 
 const validarQuadros = (q) => Array.isArray(q) && q.length > 0 && q.length < 2000 &&
   q.every(r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= -0.1 && n <= 1.1));
@@ -14,7 +15,7 @@ export async function onRequestPost({ request, env }) {
   if (!nome) return json({ erro: 'Dê um nome ao modelo.' }, 400);
   if (!validarQuadros(b.quadros)) return json({ erro: 'Moldura inválida. Refaça a detecção.' }, 400);
   const db = sb(env);
-  if (!String(b.video_url).startsWith(db.base) || !String(b.poster_url).startsWith(db.base)) return json({ erro: 'Arquivos inválidos.' }, 400);
+  if (!ehNossoArquivo(env, b.video_url) || !ehNossoArquivo(env, b.poster_url)) return json({ erro: 'Arquivos inválidos.' }, 400);
   const linha = await db.insert('modelos', {
     id: limpo(b.id) || aleatorio(8), nome, categoria_id: b.categoria_id ? limpo(b.categoria_id) : null,
     video_url: b.video_url, poster_url: b.poster_url, fps: 24, inicio: Math.max(0, b.inicio | 0),

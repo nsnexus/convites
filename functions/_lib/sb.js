@@ -24,18 +24,6 @@ export function sb(env) {
       const r = await fetch(`${base}/rest/v1/${tabela}?${query}`, { method: 'DELETE', headers: h });
       if (!r.ok) await falha(`delete ${tabela}`, r);
     },
-    async upload(bucket, caminho, corpo, tipo) {
-      const r = await fetch(`${base}/storage/v1/object/${bucket}/${caminho}`, { method: 'POST', headers: { ...h, 'content-type': tipo, 'x-upsert': 'true' }, body: corpo });
-      if (!r.ok) await falha('upload', r);
-      return `${base}/storage/v1/object/public/${bucket}/${caminho}`;
-    },
-    // Link para o navegador enviar um arquivo grande direto ao Storage
-    async linkEnvio(bucket, caminho) {
-      const r = await fetch(`${base}/storage/v1/object/upload/sign/${bucket}/${caminho}`, { method: 'POST', headers: { ...h, 'content-type': 'application/json' }, body: '{}' });
-      if (!r.ok) await falha('link de envio', r);
-      const j = await r.json();
-      return { envio: `${base}/storage/v1${j.url}`, publico: `${base}/storage/v1/object/public/${bucket}/${caminho}` };
-    },
   };
 }
 

@@ -1,13 +1,21 @@
 # NS Convites
 
 Convites em vídeo com a foto do aniversariante encaixada na moldura final de cada modelo.
-Site estático + Cloudflare Pages Functions + Supabase.
+Site estático + Cloudflare Pages Functions + R2 (arquivos) + Supabase (dados).
 
 ## Como a foto entra no vídeo
 
 Cada modelo termina numa moldura branca. Quando você envia um vídeo pelo admin, o navegador
 acha essa moldura no último quadro e volta quadro a quadro acompanhando ela; onde ela some
 é o momento em que a foto começa. As posições ficam salvas no Supabase (tabela `modelos`).
+
+## Onde fica cada coisa
+
+- **Cloudflare R2** (bucket `ns-convites`): fotos dos clientes (`fotos/`) e vídeos/capas dos
+  modelos enviados pelo admin (`modelos/`). Servidos pelo próprio site em `/arquivos/...`.
+  O R2 não cobra banda de saída e tem 10 GB grátis.
+- **Supabase**: só dados (pedidos, confirmações, modelos, categorias, pedidos especiais).
+- **Site (`public/modelos/`)**: os 17 vídeos iniciais.
 No navegador, `public/assets/js/compositor.js` desenha o vídeo num canvas (WebGL) e
 coloca a foto nos pixels brancos da moldura. Confete, pétalas e brilhos que passam
 por cima continuam aparecendo na frente da foto.
@@ -27,7 +35,7 @@ public/                 site (Cloudflare Pages)
   modelos/              os 17 vídeos iniciais e modelos.json (reserva se a API falhar)
   assets/js/config.js   WhatsApp, preços e URL do checkout
 functions/api/          API (Pages Functions)
-  convites/index.js     POST: cria pedido, envia foto ao Supabase Storage
+  convites/index.js     POST: cria pedido, salva a foto no R2
   convites/[slug].js    GET: dados do convite (só se pago)
   rsvp.js               POST: confirmação de presença
   painel.js             GET: lista de confirmações (com token)
@@ -35,7 +43,8 @@ functions/api/          API (Pages Functions)
   especial/[token].js   GET: dados de um pedido especial
   admin/*               API do admin (exige login)
   pagamento/webhook.js  POST: marca convite como pago (ligar ao gateway da NSMusic)
-supabase/schema.sql     tabelas + buckets fotos e modelos
+functions/arquivos/    GET /arquivos/...: entrega arquivos do R2 (com Range para vídeo)
+supabase/schema.sql     tabelas
 supabase/seed_modelos.sql  cadastra as 4 categorias e os 17 modelos iniciais
 tools/adicionar_modelo.py  alternativa por linha de comando (opcional)
 ```
@@ -48,16 +57,18 @@ tools/adicionar_modelo.py  alternativa por linha de comando (opcional)
    git remote add origin git@github.com:SEU-USUARIO/ns-convites.git
    git push -u origin main
    ```
-3. **Cloudflare Pages**: Workers & Pages → Create → Pages → conectar ao repositório.
+3. **Cloudflare R2**: R2 → Create bucket → nome `ns-convites`.
+4. **Cloudflare Pages**: Workers & Pages → Create → Pages → conectar ao repositório.
    - Build command: *(vazio)*
    - Output directory: `public`
-4. Em Settings → Variables and Secrets do projeto:
+   - Em Settings → Bindings: adicionar **R2 bucket**, nome da variável `ARQUIVOS`, bucket `ns-convites`.
+5. Em Settings → Variables and Secrets do projeto:
    - `SUPABASE_URL` = `https://SEU-PROJETO.supabase.co`
    - `SUPABASE_SERVICE_ROLE_KEY` = service role (secreta)
    - `WEBHOOK_SECRET` = qualquer texto longo (secreta)
    - `ADMIN_SENHA` = a senha para entrar em /admin (secreta)
    - `LIBERAR_SEM_PAGAMENTO` = `1` enquanto testa, `0` em produção
-5. Edite `public/assets/js/config.js` com o número de WhatsApp e, quando estiver pronto,
+6. Edite `public/assets/js/config.js` com o número de WhatsApp e, quando estiver pronto,
    a URL do checkout (o id do pedido vai no final da URL).
 
 Teste local: copie `.dev.vars.example` para `.dev.vars` e rode `npx wrangler pages dev public`.

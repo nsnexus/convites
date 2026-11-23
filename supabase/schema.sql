@@ -98,6 +98,4 @@ alter table public.pedidos_especiais enable row level security;
 alter table public.convites enable row level security;
 alter table public.confirmacoes enable row level security;
 
--- Buckets públicos (leitura pública, escrita só pelo servidor ou por link assinado)
-insert into storage.buckets (id, name, public) values ('fotos', 'fotos', true) on conflict (id) do nothing;
-insert into storage.buckets (id, name, public) values ('modelos', 'modelos', true) on conflict (id) do nothing;
+-- Fotos e vídeos ficam no Cloudflare R2 (binding ARQUIVOS), não no Supabase Storage.

@@ -1,4 +1,5 @@
 import { sb, json, aleatorio, limpo } from '../../_lib/sb.js';
+import { salvarArquivo } from '../../_lib/arquivos.js';
 
 const PRECO = 3990, PRECO_MUSICA = 1000;
 const txt = (fd, k, max = 200) => (fd.get(k) || '').toString().trim().slice(0, max);
@@ -34,7 +35,7 @@ export async function onRequestPost({ request, env }) {
   const slug = `${base}-${aleatorio(5)}`;
   const musica = !especial && txt(fd, 'musica', 20) === 'personalizada' ? 'personalizada' : 'modelo';
   try {
-    const foto_url = await db.upload('fotos', `${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), foto.type || 'image/jpeg');
+    const foto_url = await salvarArquivo(env, `fotos/${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), 'image/jpeg');
     const linha = await db.insert('convites', {
       slug, modelo, status: 'aguardando_pagamento', tipo: especial ? 'especial' : 'padrao', pedido_especial_id: especial?.id ?? null,
       homenageado: txt(fd, 'homenageado', 80), idade: txt(fd, 'idade', 3) || null, titulo: txt(fd, 'titulo', 120) || null,
