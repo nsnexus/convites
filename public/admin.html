@@ -128,6 +128,11 @@
       <form id="formConfig" class="cartao-adm" style="max-width:520px">
         <div class="campo"><label for="cfgZap">WhatsApp de suporte</label><input id="cfgZap" type="tel" inputmode="tel" placeholder="(94) 99111-2222">
           <span class="ajuda">Aparece no site em "Falar no WhatsApp", "Pedir modelo exclusivo" e na ajuda do pagamento. Deixe vazio para esconder esses botões.</span></div>
+        <div class="duas">
+          <div class="campo"><label for="cfgPreco">Preço do convite (R$)</label><input id="cfgPreco" inputmode="decimal" placeholder="39,90"></div>
+          <div class="campo"><label for="cfgMusica">Música personalizada (R$)</label><input id="cfgMusica" inputmode="decimal" placeholder="10,00"><span class="ajuda">Valor somado quando o cliente escolhe a música.</span></div>
+        </div>
+        <p class="nota" style="margin:0 0 14px">O preço novo vale para os pedidos feitos a partir de agora. Pedidos já criados continuam com o valor que estava na hora. Pedidos especiais têm valor próprio.</p>
         <p class="erro" id="erroConfig" hidden></p>
         <div class="linha-bts"><button class="bt bt-festa">Salvar</button><a class="bt bt-linha" id="cfgTestar" target="_blank" rel="noopener" hidden>Testar link</a></div>
       </form>

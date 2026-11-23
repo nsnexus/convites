@@ -1,10 +1,11 @@
 import { carregarModelos } from './compositor.js';
 import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes } from './estilos.js';
-import { CONFIG, reais, ligarSuporte } from './config.js';
+import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js';
 
 const $ = id => document.getElementById(id);
 const qs = new URLSearchParams(location.search);
-const dados = await carregarModelos();
+const [dados] = await Promise.all([carregarModelos(), carregarConfig()]);
+ligarPrecos();
 const slugEditar = qs.get('editar');
 const tokenEspecial = qs.get('pedido');
 let especial = null, existente = null;

@@ -1,5 +1,5 @@
 import { Compositor, carregarModelos, fotoExemplo } from './compositor.js';
-import { zap, ligarSuporte, carregarConfig, CONFIG } from './config.js';
+import { zap, ligarSuporte, ligarPrecos, carregarConfig, CONFIG } from './config.js';
 
 const [dados] = await Promise.all([carregarModelos(), carregarConfig()]);
 const porId = Object.fromEntries(dados.modelos.map(m => [m.id, m]));
@@ -90,4 +90,4 @@ modal.addEventListener('close', () => { mv.pause(); hero && hv.play().catch(() =
 document.getElementById('fechar').onclick = () => modal.close();
 modal.addEventListener('click', e => { if (e.target.classList.contains('modal-in')) modal.close(); });
 
-ligarSuporte();
+ligarSuporte(); ligarPrecos();

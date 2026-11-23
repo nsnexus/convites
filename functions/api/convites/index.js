@@ -1,8 +1,8 @@
 import { json, aleatorio, limpo, um, rodar, uuid, emailValido } from '../../_lib/util.js';
 import { salvarArquivo } from '../../_lib/arquivos.js';
 import { limparPersonalizacao } from '../../_lib/personalizacao.js';
+import { lerPrecos } from '../../_lib/config.js';
 
-const PRECO = 3990, PRECO_MUSICA = 1000;
 const txt = (fd, k, max = 200) => (fd.get(k) || '').toString().trim().slice(0, max);
 
 // POST /api/convites  (multipart: campos do formulário + foto)
@@ -47,7 +47,8 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const foto_url = await salvarArquivo(env, `fotos/${slug}/${Date.now()}.jpg`, await foto.arrayBuffer(), 'image/jpeg');
-    const id = uuid(), tokenEdicao = aleatorio(24), valor = especial ? especial.valor_centavos : PRECO + (musica === 'personalizada' ? PRECO_MUSICA : 0);
+    const precos = await lerPrecos(env);
+    const id = uuid(), tokenEdicao = aleatorio(24), valor = especial ? especial.valor_centavos : precos.convite + (musica === 'personalizada' ? precos.musica : 0);
     await rodar(env, `INSERT INTO convites (id, slug, cliente_id, modelo, tipo, pedido_especial_id, homenageado, idade, titulo, data, hora, local, endereco, recado, presentes,
       foto_url, ajuste, musica, cliente_nome, cliente_whatsapp, cliente_email, valor_centavos, token_painel, personalizacao) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       id, slug, cli.id, modelo, especial ? 'especial' : 'padrao', especial?.id ?? null,

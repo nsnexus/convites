@@ -329,14 +329,16 @@ $('edPublicar').onclick = async () => {
 
 // ---------- configurações ----------
 const formatarZap = d => d ? `(${d.slice(2, 4)}) ${d.slice(4, -4)}-${d.slice(-4)}` : '';
+const realBR = c => (c / 100).toFixed(2).replace('.', ',');
 function mostrarConfig(c) {
   $('cfgZap').value = formatarZap(c.whatsapp);
+  $('cfgPreco').value = realBR(+c.preco_convite); $('cfgMusica').value = realBR(+c.preco_musica);
   $('cfgTestar').hidden = !c.whatsapp; $('cfgTestar').href = c.whatsapp ? `https://wa.me/${c.whatsapp}` : '#';
 }
 async function carregarConfigAdm() { mostrarConfig(await api('config')); }
 $('formConfig').onsubmit = async e => {
   e.preventDefault(); $('erroConfig').hidden = true;
-  try { mostrarConfig(await api('config', { metodo: 'PATCH', corpo: { whatsapp: $('cfgZap').value } })); avisar('Configurações salvas. O site atualiza em até 1 minuto.'); }
+  try { mostrarConfig(await api('config', { metodo: 'PATCH', corpo: { whatsapp: $('cfgZap').value, preco_convite: $('cfgPreco').value, preco_musica: $('cfgMusica').value } })); avisar('Configurações salvas. O site atualiza em até 1 minuto.'); }
   catch (err) { $('erroConfig').textContent = err.message; $('erroConfig').hidden = false; }
 };
 
