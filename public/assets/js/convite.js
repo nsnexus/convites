@@ -1,8 +1,8 @@
-import { Compositor, carregarModelos, fotoExemplo } from './compositor.js';
-import { renderizarConvite, tituloDe } from './convite-render.js';
-import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js';
-import { ehCasamento } from './estilos.js';
-import { CONFIG, reais } from './config.js';
+import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=31afcda2';
+import { renderizarConvite, tituloDe } from './convite-render.js?v=a3f16b7e';
+import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js?v=25258e0a';
+import { ehCasamento } from './estilos.js?v=89817aef';
+import { CONFIG, reais } from './config.js?v=12104be8';
 
 const $ = id => document.getElementById(id);
 const embed = new URLSearchParams(location.search).has('embed');

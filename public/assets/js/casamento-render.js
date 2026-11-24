@@ -1,6 +1,6 @@
 // Página do convite de casamento: seções que entram ao rolar, ornamentos com parallax,
 // programação com marcador que acompanha a rolagem e confirmação pelo selo "RSVP".
-import { aplicarEstilo } from './estilos.js';
+import { aplicarEstilo } from './estilos.js?v=89817aef';
 
 const h = (tag, props = {}, ...filhos) => {
   const e = document.createElement(tag);

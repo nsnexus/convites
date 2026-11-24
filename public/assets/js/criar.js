@@ -1,6 +1,6 @@
-import { carregarModelos } from './compositor.js';
-import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento } from './estilos.js';
-import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js';
+import { carregarModelos } from './compositor.js?v=31afcda2';
+import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento } from './estilos.js?v=89817aef';
+import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js?v=12104be8';
 
 const $ = id => document.getElementById(id);
 const qs = new URLSearchParams(location.search);

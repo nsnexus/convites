@@ -1,6 +1,6 @@
 // Monta a parte do convite que vem depois do vídeo, a partir dos dados + personalização.
 // Usado no convite de verdade (/c/...) e na prévia ao vivo do editor.
-import { aplicarEstilo, personalizacaoPadrao } from './estilos.js';
+import { aplicarEstilo, personalizacaoPadrao } from './estilos.js?v=89817aef';
 
 const h = (tag, props = {}, ...filhos) => {
   const e = document.createElement(tag);

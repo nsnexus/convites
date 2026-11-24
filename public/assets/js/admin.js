@@ -1,6 +1,6 @@
-import { Compositor, fotoExemplo } from './compositor.js';
-import { Rastreador } from './rastreador.js';
-import { reais } from './config.js';
+import { Compositor, fotoExemplo } from './compositor.js?v=31afcda2';
+import { Rastreador } from './rastreador.js?v=d941cc90';
+import { reais } from './config.js?v=12104be8';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...filhos) => { const e = Object.assign(document.createElement(tag), props); e.append(...filhos.filter(f => f != null)); return e; };

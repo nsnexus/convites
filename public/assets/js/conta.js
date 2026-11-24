@@ -1,4 +1,4 @@
-import { CONFIG, reais, ligarSuporte } from './config.js';
+import { CONFIG, reais, ligarSuporte } from './config.js?v=12104be8';
 ligarSuporte();
 const $ = id => document.getElementById(id);
 const telas = ['telaEmail', 'telaLista', 'telaConvite'];
