@@ -5,8 +5,8 @@ const validarQuadros = (q) => Array.isArray(q) && q.length > 0 && q.length < 200
   q.every(r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= -0.1 && n <= 1.1));
 
 export async function onRequestGet({ env }) {
-  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, tipo, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
-  return json(ms.map(m => ({ ...m, ativo: !!m.ativo, exclusivo: !!m.exclusivo })));
+  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, mascara_url, chave, quadros, tipo, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
+  return json(ms.map(m => ({ ...m, ativo: !!m.ativo, exclusivo: !!m.exclusivo, chave: !!m.chave, quadros: JSON.parse(m.quadros || '[]') })));
 }
 
 // Cria um modelo depois que o navegador enviou vídeo e capa e calculou a moldura
@@ -30,10 +30,15 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestPatch({ request, env }) {
   const b = await request.json(), c = {};
+  if (b.aplicarMoldura && !b.quadros) return json({ erro: 'Moldura inválida.' }, 400);
   if (b.nome != null) c.nome = String(b.nome).trim().slice(0, 60);
   if (b.categoria_id !== undefined) c.categoria_id = b.categoria_id ? limpo(b.categoria_id) : null;
   for (const k of ['ativo', 'exclusivo', 'chave']) if (b[k] != null) c[k] = bool(b[k]);
   if (b.ordem != null) c.ordem = b.ordem | 0;
+  if (b.forma != null) {
+    const mascara = b.forma === 'mascara' && ehNossoArquivo(env, b.mascara_url) ? b.mascara_url : null;
+    c.forma = mascara ? 'mascara' : b.forma === 'circulo' ? 'circulo' : 'retangulo'; c.mascara_url = mascara;
+  }
   if (b.quadros) { if (!validarQuadros(b.quadros)) return json({ erro: 'Moldura inválida.' }, 400); c.quadros = JSON.stringify(b.quadros); c.inicio = Math.max(0, b.inicio | 0); }
   await atualizar(env, 'modelos', c, 'id = ?', limpo(b.id));
   return json({ ok: true });

@@ -157,6 +157,8 @@ async function carregarModelos() {
     nome.onchange = () => salvarModelo(m, { nome: nome.value });
     const cat = selCategorias(m.categoria_id); cat.onchange = () => salvarModelo(m, { categoria_id: cat.value });
     const tg = (rot, campo, sim, nao) => { const b = el('button', { className: 'chip', textContent: m[campo] ? sim : nao }); b.onclick = () => salvarModelo(m, { [campo]: !m[campo] }, true); return b; };
+    const editar = el('button', { className: 'chip chip-forte', textContent: 'Editar moldura' });
+    editar.onclick = () => abrirEdicao(m);
     const apagar = el('button', { className: 'chip perigo', textContent: 'Excluir' });
     apagar.onclick = async () => {
       if (!confirm(`Excluir o modelo "${m.nome}"?`)) return;
@@ -164,7 +166,7 @@ async function carregarModelos() {
       avisar(r.desativado ? 'Esse modelo já foi usado em convites, então só saiu da vitrine.' : 'Modelo excluído.'); carregarModelos();
     };
     g.append(el('div', { className: `cartao-mod${m.ativo ? '' : ' inativo'}` }, el('img', { src: m.poster_url, alt: '', loading: 'lazy' }),
-      el('div', { className: 'corpo' }, nome, cat, el('div', { className: 'tags' }, tg('', 'ativo', 'Na vitrine', 'Fora da vitrine'), tg('', 'exclusivo', 'Exclusivo', 'Público'), apagar))));
+      el('div', { className: 'corpo' }, nome, cat, el('div', { className: 'tags' }, editar, tg('', 'ativo', 'Na vitrine', 'Fora da vitrine'), tg('', 'exclusivo', 'Exclusivo', 'Público'), apagar))));
   });
 }
 async function salvarModelo(m, campos, recarregar) {
@@ -177,20 +179,26 @@ function selCategorias(atual) {
 }
 
 // ---------- editor de modelo novo ----------
-const FPS = 24, ed = { arquivo: null, det: null, manual: null, total: 0 };
+const FPS = 24, ed = { arquivo: null, det: null, manual: null, total: 0, editando: null };
 const edV = $('edVideo');
 const modeloEd = { id: 'novo', fps: FPS, inicio: 1e9, quadros: [[0, 0, 0, 0]], forma: 'retangulo', chave: true, mascara: null, tipo: 'foto' };
 let formaEscolhida = 'auto', mascaraBlob = null;
 const ehSelo = () => modeloEd.tipo === 'selo';
 let edComp;
 
-$('novoModelo').onclick = () => {
-  $('editor').hidden = false; $('editor').scrollIntoView({ behavior: 'smooth' });
+function prepararCategorias() {
   const s = $('edCat'); s.length = 0;
   categorias.forEach(c => s.append(new Option(c.nome, c.id)));
   s.append(new Option('+ Nova categoria…', '__nova'));
+}
+$('novoModelo').onclick = () => {
+  if (ed.editando) { ed.editando = null; ed.arquivo = null; ed.det = null; ed.manual = null; $('edNome').value = ''; $('edDeteccao').hidden = true; $('edArquivo').closest('label').hidden = false; edV.removeAttribute('src'); }
+  $('edTitulo').textContent = 'Vídeo novo'; $('edPublicar').textContent = 'Publicar modelo';
+  $('editor').hidden = false; $('editor').scrollIntoView({ behavior: 'smooth' });
+  prepararCategorias(); const s = $('edCat');
   if (ehSelo() && categorias.some(c => c.id === 'casamento')) s.value = 'casamento';
 };
+// (a lista de categorias do editor é montada em prepararCategorias)
 $('edTipo').onchange = e => {
   modeloEd.tipo = e.target.value;
   const selo = ehSelo();
@@ -219,18 +227,61 @@ $('edArquivo').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   ed.arquivo = f; ed.det = null; ed.manual = null; $('edPublicar').disabled = true; $('edErro').hidden = true;
   if (!$('edNome').value) $('edNome').value = f.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').slice(0, 40);
-  edV.src = URL.createObjectURL(f);
-  await new Promise((ok, er) => { edV.onloadeddata = ok; edV.onerror = () => er(); }).catch(() => { erroEd('Não consegui abrir esse vídeo. Use MP4 (H.264).'); throw 0; });
+  await carregarVideo(URL.createObjectURL(f));
   const prop = edV.videoWidth / edV.videoHeight;
   $('edInfo').textContent = `${edV.videoWidth}×${edV.videoHeight}, ${edV.duration.toFixed(1)} s, ${(f.size / 1048576).toFixed(1)} MB` + (Math.abs(prop - 9 / 16) > .03 ? '. Atenção: o vídeo não é 9:16, vai aparecer cortado.' : '');
   if (f.size > 90 * 1048576) erroEd('Vídeo acima de 90 MB. Exporte em 720p com compressão antes de enviar.');
   else if (f.size > 15 * 1048576) $('edInfo').textContent += '. Dica: exportar em 720p deixa o convite abrindo mais rápido.';
-  ed.total = Math.floor(edV.duration * FPS);
-  if (!edComp) { edComp = new Compositor($('edCanvas'), edV, modeloEd); if (ehSelo()) edComp.definirIniciais('L&R'); else edComp.definirFoto(fotoExemplo()); }
+  prepararPrevia();
   modeloEd.inicio = 1e9; edV.play().catch(() => {});
   $('edDeteccao').hidden = false;
   detectar();
 };
+async function carregarVideo(src) {
+  if (!src.startsWith('blob:')) edV.crossOrigin = 'anonymous'; else edV.removeAttribute('crossorigin');
+  edV.src = src;
+  await new Promise((ok, er) => { edV.onloadeddata = ok; edV.onerror = () => er(); }).catch(() => { erroEd('Não consegui abrir esse vídeo. Use MP4 (H.264).'); throw 0; });
+}
+function prepararPrevia() {
+  ed.total = Math.floor(edV.duration * FPS);
+  if (!edComp) edComp = new Compositor($('edCanvas'), edV, modeloEd);
+  if (ehSelo()) edComp.definirIniciais('L&R'); else edComp.definirFoto(fotoExemplo());
+}
+
+// ---------- editar um modelo já publicado (sem enviar o vídeo de novo) ----------
+async function abrirEdicao(m) {
+  prepararCategorias(); sairManual();
+  ed.editando = m; ed.arquivo = { existente: true }; ed.det = null; ed.manual = null; mascaraBlob = null;
+  $('edTitulo').textContent = `Editando: ${m.nome}`; $('edPublicar').textContent = 'Salvar alterações';
+  $('edArquivo').closest('label').hidden = true;
+  $('edNome').value = m.nome; $('edCat').value = m.categoria_id || ''; $('edExclusivo').checked = !!m.exclusivo;
+  $('edTipo').value = m.tipo || 'foto'; modeloEd.tipo = $('edTipo').value;
+  const selo = ehSelo();
+  $('edCampoForma').hidden = selo; $('edChave').closest('label').hidden = selo;
+  $('edInicioRot').textContent = selo ? 'As iniciais somem em' : 'A foto aparece em';
+  $('edLimiar').value = selo ? 190 : 225; $('edSat').value = selo ? 45 : 18;
+  $('edLimiarTxt').textContent = $('edLimiar').value; $('edSatTxt').textContent = $('edSat').value;
+  formaEscolhida = m.forma === 'mascara' ? 'auto' : (m.forma || 'retangulo'); $('edForma').value = formaEscolhida;
+  modeloEd.chave = !!m.chave; $('edChave').checked = !!m.chave;
+  $('editor').hidden = false; $('editor').scrollIntoView({ behavior: 'smooth' });
+  $('edErro').hidden = true; $('edStatus').textContent = 'Abrindo o vídeo…'; $('edDeteccao').hidden = false;
+  try { await carregarVideo(m.video_url); } catch { return; }
+  $('edInfo').textContent = `${edV.videoWidth}×${edV.videoHeight}, ${edV.duration.toFixed(1)} s`;
+  prepararPrevia();
+  const q = typeof m.quadros === 'string' ? JSON.parse(m.quadros) : m.quadros;
+  modeloEd.forma = m.forma || 'retangulo'; modeloEd.mascara = m.mascara_url || null;
+  if (modeloEd.mascara) edComp.definirMascara(modeloEd.mascara);
+  if (selo) {
+    ed.det = { quadros: q, inicio: 0 }; configurarFim(Math.max(q.length, ed.total - 1) / FPS, q.length / FPS);
+  } else if (q.length === 1) {
+    ed.manual = q[0]; ed.manualT = Math.min(edV.duration - .1, m.inicio / FPS + 1);
+    configurarInicio(0); $('edInicio').value = (m.inicio / FPS).toFixed(2); aplicarInicio();
+  } else {
+    ed.det = { quadros: q, inicio: m.inicio }; configurarInicio(m.inicio / FPS);
+  }
+  $('edStatus').textContent = 'Modelo aberto. Use "Ajustar moldura" ou mude o momento da foto e toque em Salvar alterações.';
+  $('edAjustar').hidden = false; $('edPublicar').disabled = false; mostrarMomento();
+}
 
 async function detectar() {
   $('edErro').hidden = true; $('edPublicar').disabled = true; $('edCampoInicio').hidden = true;
@@ -407,15 +458,15 @@ function pintarMarca() {
 const pos = e => { const r = mc.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
 mc.onpointerdown = e => {
   e.preventDefault(); mc.setPointerCapture(e.pointerId);
-  const [px, py] = pos(e), r = mc.getBoundingClientRect(), perto = 26;
+  const [px, py] = pos(e), r = mc.getBoundingClientRect(), perto = 26, antes = marca && [...marca];
   if (marca) {
     // canto mais perto (alvo grande para o dedo)
     const c = cantos(marca).map(([cx, cy], i) => [Math.hypot((cx - px) * r.width, (cy - py) * r.height), i]).sort((a, b) => a[0] - b[0])[0];
-    if (c[0] < perto) { const fixo = cantos(marca)[3 - c[1]]; gesto = { tipo: 'canto', fixo }; return; }
+    if (c[0] < perto) { const fixo = cantos(marca)[3 - c[1]]; gesto = { tipo: 'canto', fixo, antes }; return; }
     const [x, y, w, h] = marca;
     if (px > x && px < x + w && py > y && py < y + h) { gesto = { tipo: 'mover', ini: [px, py], orig: [...marca] }; return; }
   }
-  gesto = { tipo: 'canto', fixo: [px, py] }; marca = [px, py, 0, 0];
+  gesto = { tipo: 'canto', fixo: [px, py], antes }; marca = [px, py, 0, 0];
 };
 mc.onpointermove = e => {
   if (!gesto) return; e.preventDefault();
@@ -429,8 +480,10 @@ mc.onpointermove = e => {
   pintarMarca();
 };
 const fimGesto = () => {
-  if (!gesto) return; gesto = null;
-  if (marca && (marca[2] < .04 || marca[3] < .03)) marca = null;
+  if (!gesto) return;
+  // marcação pequena demais (toque sem arrastar, canto puxado além do outro): volta para a anterior
+  if (marca && (marca[2] < .04 || marca[3] < .03)) marca = gesto.antes || null;
+  gesto = null;
   $('edQuadroPronto').disabled = !marca; pintarMarca();
 };
 mc.onpointerup = fimGesto; mc.onpointercancel = fimGesto;
@@ -473,6 +526,7 @@ $('edPublicar').onclick = async () => {
   if (!nome) { $('edNome').focus(); return erroEd('Dê um nome ao modelo.'); }
   if ($('edCat').value === '__nova') return erroEd('Escolha a categoria.');
   const bt = $('edPublicar'); bt.disabled = true; $('edErro').hidden = true;
+  if (ed.editando) return salvarEdicao(nome, bt);
   try {
     bt.textContent = 'Preparando…';
     const links = await api('envio', { metodo: 'POST', corpo: { tipoVideo: ed.arquivo.type } });
@@ -492,6 +546,29 @@ $('edPublicar').onclick = async () => {
   } catch (err) { erroEd(err.message); }
   finally { bt.disabled = false; bt.textContent = 'Publicar modelo'; }
 };
+
+async function salvarEdicao(nome, bt) {
+  const m = ed.editando;
+  try {
+    let mascara_url = modeloEd.forma === 'mascara' ? m.mascara_url : null;
+    if (modeloEd.forma === 'mascara' && mascaraBlob) {
+      bt.textContent = 'Enviando formato…';
+      const links = await api('envio', { metodo: 'POST', corpo: { id: m.id } });
+      await enviarArquivo(links.mascara.envio, mascaraBlob, 'image/png'); mascara_url = links.mascara.publico;
+    }
+    bt.textContent = 'Salvando…';
+    await api('modelos', { metodo: 'PATCH', corpo: {
+      id: m.id, nome, categoria_id: $('edCat').value, exclusivo: $('edExclusivo').checked, chave: modeloEd.chave,
+      quadros: modeloEd.quadros, inicio: modeloEd.inicio, aplicarMoldura: true,
+      forma: ehSelo() ? 'circulo' : (mascara_url ? 'mascara' : modeloEd.forma === 'mascara' ? 'retangulo' : modeloEd.forma), mascara_url,
+    } });
+    avisar('Alterações salvas. Os convites que usam esse modelo já mostram a moldura nova.');
+    $('editor').hidden = true; edV.pause(); ed.editando = null; ed.arquivo = null; $('edArquivo').closest('label').hidden = false; $('edNome').value = ''; $('edDeteccao').hidden = true;
+    $('edTitulo').textContent = 'Vídeo novo';
+    carregarModelos();
+  } catch (err) { erroEd(err.message); }
+  finally { bt.disabled = false; bt.textContent = ed.editando ? 'Salvar alterações' : 'Publicar modelo'; }
+}
 
 // ---------- configurações ----------
 const formatarZap = d => d ? `(${d.slice(2, 4)}) ${d.slice(4, -4)}-${d.slice(-4)}` : '';
