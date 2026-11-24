@@ -251,8 +251,9 @@ async function detectar() {
       $('edStatus').textContent = `Moldura encontrada. A foto aparece em ${(r.inicio / FPS).toFixed(1)} s. Confira na prévia.`;
       await aplicarForma();
     }
-    $('edPublicar').disabled = false; verFoto();
+    $('edPublicar').disabled = false; $('edAjustar').hidden = false; verFoto();
   } catch (err) {
+    $('edAjustar').hidden = false;
     $('edStatus').textContent = '';
     erroEd(`${err.message} Ajuste a sensibilidade em "A moldura não ficou certa?" ou marque ${ehSelo() ? 'o selo' : 'a moldura'} na mão.`);
     document.querySelector('.avancado').open = true;
@@ -366,44 +367,77 @@ $('edVerFoto').onclick = verFoto;
 $('edDoInicio').onclick = () => { edV.currentTime = 0; edV.play().catch(() => {}); };
 function erroEd(t) { $('edErro').textContent = t; $('edErro').hidden = false; }
 
-// marcação manual: arrastar um retângulo sobre o último quadro
+// marcação manual: retângulo sobre um quadro parado; depois de marcar dá para mover e redimensionar
 const mc = $('edMarcar');
-$('edManual').onclick = async () => {
+let marca = null, gesto = null, fundo = null;   // marca = [x, y, w, h] normalizado
+async function abrirMarcacao() {
   if (!ed.arquivo) return erroEd('Escolha o vídeo primeiro.');
   edV.pause();
   mc.hidden = false; $('edManualAjuda').hidden = false; $('edQuadroBox').hidden = false;
   const dpr = Math.min(2, devicePixelRatio || 1); mc.width = mc.clientWidth * dpr; mc.height = mc.clientHeight * dpr;
   const q = $('edQuadro'); q.max = Math.max(0, edV.duration - .1).toFixed(2);
-  q.value = (ehSelo() ? 0 : Math.max(0, edV.duration - .3)).toFixed(2);
+  // começa da marcação atual (manual ou a detectada), se houver
+  marca = ed.manual ? [...ed.manual] : (!ehSelo() && ed.det ? [...modeloEd.quadros[modeloEd.quadros.length - 1]] : (ehSelo() && ed.det ? [...ed.det.quadros[0]] : null));
+  q.value = (ed.manual ? ed.manualT : ehSelo() ? 0 : Math.max(0, edV.duration - .3)).toFixed(2);
+  $('edQuadroPronto').disabled = !marca;
   await mostrarQuadro();
   mc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-};
-function sairManual() { mc.hidden = true; $('edManualAjuda').hidden = true; $('edQuadroBox').hidden = true; }
+}
+$('edManual').onclick = abrirMarcacao;
+$('edAjustar').onclick = abrirMarcacao;
+function sairManual() { mc.hidden = true; $('edManualAjuda').hidden = true; $('edQuadroBox').hidden = true; gesto = null; }
 $('edQuadroSair').onclick = sairManual;
-let arrasto = null, fundo = null;
 async function mostrarQuadro() {
   const t = +$('edQuadro').value; $('edQuadroTxt').textContent = `${t.toFixed(1)} s`;
   fundo = await quadroEm(t); pintarMarca();
 }
 $('edQuadro').oninput = () => mostrarQuadro();
-// desenha o quadro como na prévia (cobrindo a tela 9:16) e o retângulo por cima
+const cantos = m => [[m[0], m[1]], [m[0] + m[2], m[1]], [m[0], m[1] + m[3]], [m[0] + m[2], m[1] + m[3]]];
 function pintarMarca() {
-  const g = mc.getContext('2d'); g.clearRect(0, 0, mc.width, mc.height);
-  if (fundo) g.drawImage(fundo, 0, 0, mc.width, mc.height);
-  if (!arrasto) return;
-  const [[a, b], [c, d]] = arrasto;
-  g.fillStyle = 'rgba(232,51,109,.18)'; g.fillRect(Math.min(a, c) * mc.width, Math.min(b, d) * mc.height, Math.abs(c - a) * mc.width, Math.abs(d - b) * mc.height);
-  g.strokeStyle = '#E8336D'; g.lineWidth = 3 * (mc.width / mc.clientWidth); g.setLineDash([8, 6]); g.strokeRect(Math.min(a, c) * mc.width, Math.min(b, d) * mc.height, Math.abs(c - a) * mc.width, Math.abs(d - b) * mc.height);
+  const g = mc.getContext('2d'), W = mc.width, H = mc.height, k = W / mc.clientWidth;
+  g.clearRect(0, 0, W, H);
+  if (fundo) g.drawImage(fundo, 0, 0, W, H);
+  if (!marca) return;
+  const [x, y, w, h] = marca;
+  // escurece fora da marcação para ver bem a área escolhida
+  g.fillStyle = 'rgba(20,8,26,.45)'; g.beginPath(); g.rect(0, 0, W, H); g.rect(x * W, y * H, w * W, h * H); g.fill('evenodd');
+  g.setLineDash([8 * k, 6 * k]); g.strokeStyle = '#E8336D'; g.lineWidth = 2.5 * k; g.strokeRect(x * W, y * H, w * W, h * H); g.setLineDash([]);
+  for (const [cx, cy] of cantos(marca)) { g.beginPath(); g.arc(cx * W, cy * H, 9 * k, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 3 * k; g.strokeStyle = '#E8336D'; g.stroke(); }
 }
 const pos = e => { const r = mc.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
-mc.onpointerdown = e => { e.preventDefault(); mc.setPointerCapture(e.pointerId); arrasto = [pos(e), pos(e)]; pintarMarca(); };
-mc.onpointermove = e => { if (!arrasto) return; e.preventDefault(); arrasto[1] = pos(e); pintarMarca(); };
-mc.onpointercancel = () => { arrasto = null; pintarMarca(); };
-mc.onpointerup = async () => {
-  if (!arrasto) return; const [[a, b], [c, d]] = arrasto; arrasto = null;
-  if (Math.abs(c - a) < .05 || Math.abs(d - b) < .05) { pintarMarca(); return; }
-  ed.manual = [Math.min(a, c), Math.min(b, d), Math.abs(c - a), Math.abs(d - b)].map(n => +n.toFixed(4));
+mc.onpointerdown = e => {
+  e.preventDefault(); mc.setPointerCapture(e.pointerId);
+  const [px, py] = pos(e), r = mc.getBoundingClientRect(), perto = 26;
+  if (marca) {
+    // canto mais perto (alvo grande para o dedo)
+    const c = cantos(marca).map(([cx, cy], i) => [Math.hypot((cx - px) * r.width, (cy - py) * r.height), i]).sort((a, b) => a[0] - b[0])[0];
+    if (c[0] < perto) { const fixo = cantos(marca)[3 - c[1]]; gesto = { tipo: 'canto', fixo }; return; }
+    const [x, y, w, h] = marca;
+    if (px > x && px < x + w && py > y && py < y + h) { gesto = { tipo: 'mover', ini: [px, py], orig: [...marca] }; return; }
+  }
+  gesto = { tipo: 'canto', fixo: [px, py] }; marca = [px, py, 0, 0];
+};
+mc.onpointermove = e => {
+  if (!gesto) return; e.preventDefault();
+  const [px, py] = pos(e);
+  if (gesto.tipo === 'mover') {
+    const [x, y, w, h] = gesto.orig;
+    marca = [Math.min(1 - w, Math.max(0, x + px - gesto.ini[0])), Math.min(1 - h, Math.max(0, y + py - gesto.ini[1])), w, h];
+  } else {
+    const [fx, fy] = gesto.fixo; marca = [Math.min(fx, px), Math.min(fy, py), Math.abs(px - fx), Math.abs(py - fy)];
+  }
+  pintarMarca();
+};
+const fimGesto = () => {
+  if (!gesto) return; gesto = null;
+  if (marca && (marca[2] < .04 || marca[3] < .03)) marca = null;
+  $('edQuadroPronto').disabled = !marca; pintarMarca();
+};
+mc.onpointerup = fimGesto; mc.onpointercancel = fimGesto;
+
+$('edQuadroPronto').onclick = async () => {
+  if (!marca) return;
+  ed.manual = marca.map(n => +n.toFixed(4));
   ed.manualT = +$('edQuadro').value;
   ed.det = null; sairManual();
   if (ehSelo()) {
@@ -414,7 +448,7 @@ mc.onpointerup = async () => {
     $('edStatus').textContent = 'Moldura marcada. Escolha a partir de quando a foto aparece.';
     await aplicarForma();
   }
-  $('edErro').hidden = true;
+  $('edDeteccao').hidden = false; $('edErro').hidden = true; $('edAjustar').hidden = false;
   $('edPublicar').disabled = false; mostrarMomento();
 };
 

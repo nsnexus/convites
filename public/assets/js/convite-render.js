@@ -8,7 +8,7 @@ const h = (tag, props = {}, ...filhos) => {
     if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
     else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else if (v != null && v !== false) e.setAttribute(k, v === true ? '' : v);
   }
-  e.append(...filhos.flat().filter(f => f != null && f !== false));
+  e.append(...filhos.flat(Infinity).filter(f => f != null && f !== false));
   return e;
 };
 const svg = (d) => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('width', '22'); s.setAttribute('height', '22'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.innerHTML = d; return s; };
@@ -21,31 +21,68 @@ export const tituloDe = c => c.titulo || `${c.homenageado || 'Aniversariante'}${
 const dataHora = c => new Date(`${c.data || '2026-12-31'}T${c.hora || '00:00'}:00`);
 const capital = s => s.charAt(0).toUpperCase() + s.slice(1);
 
-let relogio;
+// Partículas do topo conforme o estilo: o que cai, pisca ou sobe atrás do nome
+const PARTICULA = { classico: 'brilho', princesa: 'estrela', jardim: 'folha', minimal: 'ponto', neon: 'neon', ingresso: 'confete', esportivo: 'confete',
+  hq: 'hq', aquarela: 'bolha', rustico: 'folha', linho: 'ponto', mono: 'ponto', areia: 'ponto', salvia: 'folha', sereno: 'ponto', rose: 'brilho',
+  grafite: 'ponto', oliva: 'folha', lavanda: 'bolha', noite: 'brilho' };
+const ORNAMENTO = { jardim: '❦', rustico: '✿', hq: '★', esportivo: '●', neon: '✦', princesa: '✧', aquarela: '❀', lavanda: '❀', noite: '✦', classico: '◆' };
+const MOVIMENTO = { confete: 'cai', folha: 'cai', estrela: 'cai', hq: 'cai', bolha: 'sobe' };
+const TEXTO_PARTICULA = { estrela: '✦', brilho: '✦', hq: '★' };
+function ceu(estilo) {
+  const tipo = PARTICULA[estilo] || 'confete', mov = MOVIMENTO[tipo] || 'pisca', n = ['ponto', 'brilho', 'neon'].includes(tipo) ? 22 : 18;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  return h('div', { class: `cv-ceu ${mov}`, 'aria-hidden': 'true' }, Array.from({ length: n }, (_, i) =>
+    h('span', { class: `cv-p ${tipo}`, text: TEXTO_PARTICULA[tipo] || '',
+      style: `--x:${rnd(2, 98).toFixed(1)}%;--y:${rnd(4, 92).toFixed(1)}%;--d:${rnd(7, 15).toFixed(1)}s;--a:${(-rnd(0, 15)).toFixed(1)}s;--s:${rnd(.7, 1.5).toFixed(2)};--r:${rnd(-180, 180).toFixed(0)}deg;--v:${i % 3}` })));
+}
+// título letra por letra (o leitor de tela recebe o texto inteiro pelo aria-label)
+function tituloAnimado(texto) {
+  let i = 0;
+  return h('h1', { class: 'cv-titulo', 'aria-label': texto },
+    texto.split(' ').map((p, k, ps) => [h('span', { class: 'cv-pal', 'aria-hidden': 'true' }, [...p].map(l => h('span', { class: 'cv-l', style: `--i:${i++}`, text: l }))), k < ps.length - 1 ? ' ' : null]));
+}
+
+let relogio, limpar = () => {};
 export function renderizarConvite(raiz, c, { modo = 'real', aoConfirmar } = {}) {
   clearInterval(relogio);
+  const anterior = limpar; limpar = () => {}; anterior();
   const p = mesclar(personalizacaoPadrao(), c.personalizacao || {});
   const b = p.blocos, dt = dataHora(c);
   const previa = modo !== 'real';
-  const main = h('main', { class: `cv${modo === 'previa' ? ' em-previa' : ''}`, id: 'detalhes' });
-  aplicarEstilo(main, p);
+  const main = h('main', { class: `cv${modo === 'previa' ? ' em-previa' : ''}${modo === 'editor' ? ' cv-estatico' : ''}`, id: 'detalhes' });
+  const est = aplicarEstilo(main, p);
   const dentro = h('div', { class: 'cv-in' });
-  main.append(dentro);
 
-  // topo
-  const quandoCurto = `${dt.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}${c.hora ? ` · ${c.hora.replace(':', 'h')}` : ''}`;
-  dentro.append(h('header', { class: 'cv-topo' },
-    h('p', { class: 'cv-chamada', text: 'Você está convidado para' }),
-    h('h1', { class: 'cv-titulo', text: tituloDe(c) }),
-    h('p', { class: 'cv-quando-curto', text: quandoCurto })));
-  if (c.recado) dentro.append(h('p', { class: 'cv-recado', text: c.recado }));
+  // formas suaves ao fundo, que andam em velocidades diferentes ao rolar
+  main.append(h('div', { class: 'cv-formas', 'aria-hidden': 'true' },
+    h('i', { 'data-paralaxe': '-0.12' }), h('i', { 'data-paralaxe': '0.08' }), h('i', { 'data-paralaxe': '-0.05' })));
+
+  // abertura: tela cheia com o nome entrando letra por letra
+  const quandoCurto = [c.hora ? `às ${c.hora.replace(':', 'h')}` : '', c.local || ''].filter(Boolean).join(' · ');
+  const hero = h('section', { class: 'cv-hero' }, ceu(est.id),
+    c.idade ? h('div', { class: 'cv-idade-fundo', 'aria-hidden': 'true', 'data-paralaxe': '0.18', text: c.idade }) : null,
+    h('div', { class: 'cv-in' },
+      h('header', { class: 'cv-topo' },
+        h('p', { class: 'cv-chamada', text: 'Você está convidado para' }),
+        tituloAnimado(tituloDe(c)),
+        quandoCurto ? h('p', { class: 'cv-quando-curto', text: quandoCurto }) : null),
+      h('div', { class: 'cv-datas', 'aria-label': capital(dt.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) },
+        h('span', { class: 'cv-dd-lado', 'aria-hidden': 'true', text: dt.toLocaleDateString('pt-BR', { weekday: 'long' }).replace('-feira', '') }),
+        h('b', { class: 'cv-dd-dia', 'aria-hidden': 'true', text: String(dt.getDate()).padStart(2, '0') }),
+        h('span', { class: 'cv-dd-lado', 'aria-hidden': 'true', text: `${dt.toLocaleDateString('pt-BR', { month: 'long' })} ${dt.getFullYear()}` }))),
+    h('div', { class: 'cv-rolar', 'aria-hidden': 'true' }, h('span', { text: 'Role para ver tudo' }), h('i')));
+  main.append(hero, dentro);
+  if (c.recado) dentro.append(h('p', { class: 'cv-recado rv', text: c.recado }));
 
   // contagem regressiva
   if (b.contagem) {
-    const caixas = ['dias', 'horas', 'min', 'seg'].map(n => h('div', {}, h('b', { text: '0' }), h('span', { text: n })));
+    const caixas = ['dias', 'horas', 'min', 'seg'].map((n, i) => h('div', { class: 'rv pop', 'data-atraso': String(i + 1) }, h('b', { text: '0' }), h('span', { text: n })));
     const atualizar = () => {
       let s = Math.max(0, Math.floor((dt - Date.now()) / 1000));
-      [Math.floor(s / 86400), Math.floor(s % 86400 / 3600), Math.floor(s % 3600 / 60), s % 60].forEach((v, i) => caixas[i].firstChild.textContent = v);
+      [Math.floor(s / 86400), Math.floor(s % 86400 / 3600), Math.floor(s % 3600 / 60), s % 60].forEach((v, i) => {
+        const b = caixas[i].firstChild; if (b.textContent === String(v)) return;
+        b.textContent = v; b.classList.remove('rola'); void b.offsetWidth; b.classList.add('rola');
+      });
     };
     atualizar(); relogio = setInterval(atualizar, 1000);
     dentro.append(h('div', { class: 'cv-contagem', 'aria-label': 'Contagem regressiva' }, caixas));
@@ -89,15 +126,62 @@ export function renderizarConvite(raiz, c, { modo = 'real', aoConfirmar } = {}) 
     dentro.append(h('section', { class: 'cv-bloco' }, h('h2', { text: 'Sugestões de presente' }), cart));
   }
 
-  // observações
+  // observações (fica antes do fechamento)
   if (b.observacoes.ativo && b.observacoes.texto) dentro.append(h('section', { class: 'cv-bloco' }, h('h2', { text: 'Importante' }), h('div', { class: 'cv-cartao' }, h('p', { text: b.observacoes.texto }))));
 
   // confirmação de presença
   if (b.rsvp.ativo) dentro.append(blocoRsvp(c, b, { previa, aoConfirmar }));
 
+  // fechamento
+  dentro.append(h('section', { class: 'cv-fim' },
+    h('p', { class: 'cv-fim-chamada rv', text: p.encerramento || 'Conto com a sua presença!' }),
+    h('p', { class: 'cv-fim-nome rv', 'data-atraso': '1', text: c.homenageado || tituloDe(c) }),
+    h('p', { class: 'cv-fim-data rv', 'data-atraso': '2', text: dt.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).replaceAll('/', ' · ') })));
+
   dentro.append(h('p', { class: 'cv-rodape' }, 'Convite feito com ', h('a', { href: '/', target: '_top', text: 'NS Convites' })));
+  // entradas ao rolar: blocos sobem, cartões vêm dos lados, itens em sequência
+  const orn = ORNAMENTO[est.id] || '✦';
+  dentro.querySelectorAll('.cv-bloco').forEach((sec, k) => {
+    sec.classList.add('rv');
+    const h2 = sec.querySelector(':scope > h2');
+    if (h2) h2.after(h('span', { class: 'cv-traco', 'aria-hidden': 'true' }));
+    sec.before(h('div', { class: 'cv-div rv', 'aria-hidden': 'true' }, h('i'), h('span', { text: orn }), h('i')));
+  });
+  dentro.querySelectorAll('.cv-info .cv-cartao').forEach((el, i) => el.classList.add('rv', i % 2 ? 'dir' : 'esq'));
+  dentro.querySelectorAll('.cv-prog li, .cv-presentes li, .cv-cores i').forEach((el, i, todos) => { el.classList.add('rv', 'item'); el.dataset.atraso = String(Math.min(4, [...el.parentElement.children].indexOf(el) + 1)); });
+  dentro.querySelectorAll('.cv-bts, .cv-pix').forEach(el => el.classList.add('rv'));
+
   raiz.replaceChildren(main);
+  animar(main, hero, modo === 'editor');
   return main;
+}
+
+function animar(main, hero, estatico) {
+  const tudo = main.querySelectorAll('.rv');
+  if (estatico || matchMedia('(prefers-reduced-motion: reduce)').matches) { hero.classList.add('ativa'); tudo.forEach(el => el.classList.add('visto')); if (estatico) return; }
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add(e.target === hero ? 'ativa' : 'visto'); io.unobserve(e.target);
+  }), { threshold: .18, rootMargin: '0px 0px -6% 0px' });
+  io.observe(hero); tudo.forEach(el => io.observe(el));
+  const moveis = [...main.querySelectorAll('[data-paralaxe]')], prog = main.querySelector('.cv-prog');
+  let pedido = false;
+  const quadro = () => {
+    pedido = false; const vh = innerHeight;
+    for (const o of moveis) { const r = o.getBoundingClientRect(); if (r.bottom < -vh || r.top > 2 * vh) continue; o.style.translate = `0 ${((r.top + r.height / 2) - vh / 2) * -(+o.dataset.paralaxe)}px`; }
+    if (prog) { const r = prog.getBoundingClientRect(); prog.style.setProperty('--prog', `${(Math.min(1, Math.max(0, (vh * .6 - r.top) / r.height)) * 100).toFixed(1)}%`); }
+  };
+  const aoRolar = () => { if (!pedido) { pedido = true; requestAnimationFrame(quadro); } };
+  addEventListener('scroll', aoRolar, { passive: true }); quadro();
+  limpar = () => { removeEventListener('scroll', aoRolar); io.disconnect(); };
+}
+
+// chuva de confete quando o convidado confirma
+function confete(alvo) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const caixa = h('div', { class: 'cv-confete', 'aria-hidden': 'true' });
+  for (let i = 0; i < 46; i++) caixa.append(h('i', { style: `--x:${(Math.random() * 2 - 1) * 46}vw;--y:${-(30 + Math.random() * 45)}vh;--r:${Math.random() * 900 - 450}deg;--d:${(1.1 + Math.random() * .9).toFixed(2)}s;--v:${i % 3}` }));
+  alvo.append(caixa); setTimeout(() => caixa.remove(), 2400);
 }
 
 function blocoRsvp(c, b, { previa, aoConfirmar }) {
@@ -141,6 +225,7 @@ function blocoRsvp(c, b, { previa, aoConfirmar }) {
     const corpo = { slug: c.slug, nome: nome.value.trim(), vai: vai === 'sim', adultos: qtd.adultos, criancas: qtd.criancas, presente: form.querySelector('[name=presente]:checked')?.value || null, recado: recado.value || null };
     try {
       await aoConfirmar?.(corpo);
+      if (corpo.vai) confete(sec);
       form.replaceWith(h('div', { class: 'cv-cartao cv-ok' }, h('strong', { text: corpo.vai ? 'Presença confirmada!' : 'Resposta enviada' }),
         h('span', { text: corpo.vai ? `Obrigado, ${corpo.nome}! Te esperamos lá.` : `Obrigado por avisar, ${corpo.nome}.` })));
     } catch (err) { mostrar(err.message || 'A resposta não foi enviada. Tente de novo.'); enviar.disabled = false; }

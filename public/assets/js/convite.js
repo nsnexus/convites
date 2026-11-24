@@ -1,5 +1,5 @@
 import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=31afcda2';
-import { renderizarConvite, tituloDe } from './convite-render.js?v=a3f16b7e';
+import { renderizarConvite, tituloDe } from './convite-render.js?v=906fc5c6';
 import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js?v=25258e0a';
 import { ehCasamento } from './estilos.js?v=89817aef';
 import { CONFIG, reais } from './config.js?v=12104be8';

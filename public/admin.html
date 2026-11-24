@@ -73,12 +73,12 @@
       <div id="editor" class="cartao-adm editor" hidden>
         <div class="ed-prev">
           <div class="celular"><canvas id="edCanvas"></canvas><canvas id="edMarcar" class="marcar" hidden></canvas><video id="edVideo" class="vid-oculto" muted playsinline loop preload="auto"></video></div>
-          <div class="mini-acoes"><button type="button" id="edVerFoto">Ver a foto</button><button type="button" id="edDoInicio">Do início</button></div>
+          <div class="mini-acoes"><button type="button" id="edVerFoto">Ver a foto</button><button type="button" id="edDoInicio">Do início</button><button type="button" id="edAjustar" hidden>Ajustar moldura</button></div>
           <div class="campo ed-quadro" id="edQuadroBox" hidden>
             <label for="edQuadro">Quadro para marcar <b id="edQuadroTxt"></b></label>
             <input type="range" id="edQuadro" min="0" max="10" step="0.04">
-            <span class="ajuda">Escolha um quadro com a moldura inteira à mostra e arraste o dedo sobre ela, de um canto ao outro.</span>
-            <button type="button" class="bt bt-linha" id="edQuadroSair" style="width:max-content">Cancelar marcação</button>
+            <span class="ajuda">Escolha um quadro com a moldura inteira à mostra. Arraste de um canto ao outro para marcar. Depois dá para arrastar a marcação inteira ou puxar pelas bolinhas dos cantos.</span>
+            <div class="linha-bts"><button type="button" class="bt bt-festa" id="edQuadroPronto" disabled>Usar esta marcação</button><button type="button" class="bt bt-linha" id="edQuadroSair">Cancelar</button></div>
           </div>
         </div>
         <div class="ed-form">
@@ -151,6 +151,6 @@
 </div>
 
 <div class="aviso" id="aviso" role="status" hidden></div>
-<script type="module" src="/assets/js/admin.js?v=f0a0f983"></script>
+<script type="module" src="/assets/js/admin.js?v=ca0b5089"></script>
 </body>
 </html>
