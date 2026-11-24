@@ -103,11 +103,11 @@ $('modelo').onchange = e => {
   if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   // se o cliente ainda não mexeu no estilo, acompanha a categoria do vídeo
   if (pers.estilo === personalizacaoPadrao(modelo.categoria).estilo) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
-  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); atualizar('video');
+  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); pintarEnquadro(); atualizar('video');
 };
 if (existente) { $('btFoto').hidden = true; $('fotoInfo').textContent = 'A foto não pode ser trocada depois do pedido, mas você pode ajustar o enquadramento.'; $('ajustes').hidden = false; }
 else if (fotoSrc) { $('ajustes').hidden = false; $('fotoInfo').textContent = 'Usando a foto que você testou na página inicial.'; }
-$('zoom').value = ajuste.zoom; $('px').value = ajuste.x; $('py').value = ajuste.y;
+$('zoom').value = ajuste.zoom;
 $('foto').onchange = async e => {
   const f = e.target.files[0]; if (!f) return;
   if (!f.type.startsWith('image/')) return mostrarErro('Escolha um arquivo de imagem (JPG ou PNG).');
@@ -123,7 +123,7 @@ $('foto').onchange = async e => {
     if (fotoSrc?.startsWith('blob:')) URL.revokeObjectURL(fotoSrc);
     arquivoFoto = nova; fotoSrc = URL.createObjectURL(nova);
     $('erro').hidden = true;
-    $('ajustes').hidden = false;
+    $('ajustes').hidden = false; ajuste = { zoom: 1, x: .5, y: .5 }; $('zoom').value = 1; prepararEnquadro();
     $('fotoInfo').textContent = 'Foto pronta para a prévia. Ela será enviada ao clicar em “Ver convite pronto”.';
     atualizar('foto');
   } catch {
@@ -131,8 +131,73 @@ $('foto').onchange = async e => {
     mostrarErro('Não foi possível abrir essa foto. Tente uma imagem JPG, PNG ou WebP.');
   } finally { URL.revokeObjectURL(entrada); e.target.value = ''; }
 };
-['zoom', 'px', 'py'].forEach(id => $(id).oninput = () => { ajuste = { zoom: +$('zoom').value, x: +$('px').value, y: +$('py').value }; atualizar(); });
-['zoom', 'px', 'py'].forEach(id => $(id).onchange = () => iframe.contentWindow.irPara?.('foto'));
+// ---------- enquadramento: arrastar e pinçar a foto dentro da moldura ----------
+// Mesma conta do compositor: foto em "cover" na moldura, vezes o zoom; x/y = posição de 0 a 1.
+const enq = $('enquadro'); let fotoDim = null, fimMexer = 0;
+function molduraDoModelo() {
+  const q = modelo?.quadros?.[modelo.quadros.length - 1] || [0, 0, .6, .45];
+  return { prop: Math.max(.3, Math.min(3, (q[2] * 720) / (q[3] * 1280))), forma: modelo?.forma, mascara: modelo?.mascara };
+}
+// a máscara do modelo é preto e branco; o CSS precisa dela em transparência
+const alfas = {};
+function mascaraAlfa(src) {
+  if (alfas[src] !== undefined) return alfas[src];
+  alfas[src] = '';
+  const im = new Image(); im.crossOrigin = 'anonymous';
+  im.onload = () => { try {
+    const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+    const d = g.getImageData(0, 0, c.width, c.height); for (let i = 0; i < d.data.length; i += 4) { d.data[i + 3] = d.data[i]; d.data[i] = d.data[i + 1] = d.data[i + 2] = 0; }
+    g.putImageData(d, 0, 0); alfas[src] = c.toDataURL('image/png'); pintarEnquadro();
+  } catch {} };
+  im.src = src; return '';
+}
+async function prepararEnquadro() {
+  if (!fotoSrc) return;
+  const im = new Image(); im.src = fotoSrc; try { await im.decode(); } catch { return; }
+  fotoDim = [im.naturalWidth, im.naturalHeight]; enq.style.backgroundImage = `url("${fotoSrc}")`; pintarEnquadro();
+}
+function pintarEnquadro() {
+  if (!fotoDim) return;
+  const m = molduraDoModelo();
+  enq.style.aspectRatio = String(m.prop);
+  enq.classList.toggle('circulo', m.forma === 'circulo');
+  const mk = m.forma === 'mascara' && m.mascara ? mascaraAlfa(m.mascara) : '';
+  enq.style.webkitMaskImage = enq.style.maskImage = mk ? `url("${mk}")` : ''; enq.style.webkitMaskSize = enq.style.maskSize = '100% 100%';
+  const W = enq.clientWidth, H = enq.clientHeight; if (!W || !H) return;
+  const esc = Math.max(W / fotoDim[0], H / fotoDim[1]) * ajuste.zoom, w = fotoDim[0] * esc, h = fotoDim[1] * esc;
+  enq.style.backgroundSize = `${w}px ${h}px`;
+  enq.style.backgroundPosition = `${(W - w) * ajuste.x}px ${(H - h) * ajuste.y}px`;
+}
+const limitar = v => Math.min(1, Math.max(0, v));
+function mudarAjuste(novo) {
+  Object.assign(ajuste, novo); ajuste.zoom = Math.min(3, Math.max(1, ajuste.zoom)); ajuste.x = limitar(ajuste.x); ajuste.y = limitar(ajuste.y);
+  ajuste = { ...ajuste }; $('zoom').value = ajuste.zoom; pintarEnquadro(); atualizar();
+  enq.classList.add('mexendo'); clearTimeout(fimMexer);
+  fimMexer = setTimeout(() => { enq.classList.remove('mexendo'); iframe.contentWindow.irPara?.('foto'); }, 500);
+}
+const dedos = new Map(); let gesto = null;
+function lerGesto() {
+  const p = [...dedos.values()], W = enq.clientWidth, H = enq.clientHeight;
+  const esc = Math.max(W / fotoDim[0], H / fotoDim[1]) * ajuste.zoom;
+  const cx = p.reduce((s, q) => s + q.x, 0) / p.length, cy = p.reduce((s, q) => s + q.y, 0) / p.length;
+  const dist = p.length > 1 ? Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) : 0;
+  return { cx, cy, dist, zoom: ajuste.zoom, x: ajuste.x, y: ajuste.y, folgaX: fotoDim[0] * esc - W, folgaY: fotoDim[1] * esc - H };
+}
+enq.addEventListener('pointerdown', e => { if (!fotoDim) return; enq.setPointerCapture(e.pointerId); dedos.set(e.pointerId, { x: e.clientX, y: e.clientY }); gesto = lerGesto(); });
+enq.addEventListener('pointermove', e => {
+  if (!dedos.has(e.pointerId) || !gesto) return; e.preventDefault();
+  dedos.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  const p = [...dedos.values()], cx = p.reduce((s, q) => s + q.x, 0) / p.length, cy = p.reduce((s, q) => s + q.y, 0) / p.length;
+  const zoom = p.length > 1 && gesto.dist ? gesto.zoom * Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) / gesto.dist : gesto.zoom;
+  // arrastar para a direita mostra mais da esquerda da foto
+  mudarAjuste({ zoom, x: gesto.folgaX > 0 ? gesto.x - (cx - gesto.cx) / gesto.folgaX : .5, y: gesto.folgaY > 0 ? gesto.y - (cy - gesto.cy) / gesto.folgaY : .5 });
+});
+const soltar = e => { dedos.delete(e.pointerId); gesto = dedos.size ? lerGesto() : null; };
+enq.addEventListener('pointerup', soltar); enq.addEventListener('pointercancel', soltar);
+enq.addEventListener('wheel', e => { if (!fotoDim) return; e.preventDefault(); mudarAjuste({ zoom: ajuste.zoom * (e.deltaY < 0 ? 1.06 : 1 / 1.06) }); }, { passive: false });
+$('zoom').oninput = () => mudarAjuste({ zoom: +$('zoom').value });
+addEventListener('resize', pintarEnquadro);
+prepararEnquadro();
 
 // ---------- 2. festa ----------
 ['homenageado', 'idade', 'tituloConvite', 'data', 'hora', 'local', 'endereco', 'recado', 'nome1', 'nome2', 'iniciais', 'versiculo', 'encerramento'].forEach(id => $(id).addEventListener('input', atualizar));

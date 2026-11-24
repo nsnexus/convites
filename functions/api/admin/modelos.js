@@ -19,10 +19,12 @@ export async function onRequestPost({ request, env }) {
   const id = limpo(b.id) || aleatorio(8);
   const ult = await um(env, 'SELECT MAX(ordem) AS o FROM modelos');
   const tipo = b.tipo === 'selo' ? 'selo' : 'foto';
-  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, chave, quadros, exclusivo, ativo, ordem, tipo)
-    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, 1, ?, ?)`,
+  const mascara = b.forma === 'mascara' && ehNossoArquivo(env, b.mascara_url) ? b.mascara_url : null;
+  const forma = mascara ? 'mascara' : b.forma === 'circulo' ? 'circulo' : 'retangulo';
+  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, mascara_url, chave, quadros, exclusivo, ativo, ordem, tipo)
+    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
     id, nome, b.categoria_id ? limpo(b.categoria_id) : null, b.video_url, b.poster_url, Math.max(0, b.inicio | 0),
-    b.forma === 'circulo' ? 'circulo' : 'retangulo', bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1, tipo);
+    forma, mascara, bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1, tipo);
   return json({ id });
 }
 

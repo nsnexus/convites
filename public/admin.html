@@ -74,6 +74,12 @@
         <div class="ed-prev">
           <div class="celular"><canvas id="edCanvas"></canvas><canvas id="edMarcar" class="marcar" hidden></canvas><video id="edVideo" class="vid-oculto" muted playsinline loop preload="auto"></video></div>
           <div class="mini-acoes"><button type="button" id="edVerFoto">Ver a foto</button><button type="button" id="edDoInicio">Do início</button></div>
+          <div class="campo ed-quadro" id="edQuadroBox" hidden>
+            <label for="edQuadro">Quadro para marcar <b id="edQuadroTxt"></b></label>
+            <input type="range" id="edQuadro" min="0" max="10" step="0.04">
+            <span class="ajuda">Escolha um quadro com a moldura inteira à mostra e arraste o dedo sobre ela, de um canto ao outro.</span>
+            <button type="button" class="bt bt-linha" id="edQuadroSair" style="width:max-content">Cancelar marcação</button>
+          </div>
         </div>
         <div class="ed-form">
           <h2>Vídeo novo</h2>
@@ -86,7 +92,7 @@
           <div class="campo"><label for="edNome">Nome</label><input id="edNome" placeholder="Ex.: Safari"></div>
           <div class="duas">
             <div class="campo"><label for="edCat">Categoria</label><select id="edCat"></select></div>
-            <div class="campo" id="edCampoForma"><label for="edForma">Formato da moldura</label><select id="edForma"><option value="retangulo">Retângulo</option><option value="circulo">Círculo</option></select></div>
+            <div class="campo" id="edCampoForma"><label for="edForma">Formato da moldura</label><select id="edForma"><option value="auto">Automático (segue o branco)</option><option value="retangulo">Retângulo</option><option value="circulo">Círculo</option></select></div>
           </div>
           <label class="check"><input type="checkbox" id="edExclusivo"> Exclusivo (não aparece na vitrine, só em pedido especial)</label>
           <label class="check"><input type="checkbox" id="edChave" checked> Confete e pétalas passam por cima da foto</label>
@@ -95,8 +101,9 @@
             <div class="status-det" id="edStatus"></div>
             <div class="barra" id="edBarra" hidden><span></span></div>
             <div class="campo" id="edCampoInicio" hidden>
-              <label for="edInicio"><span id="edInicioRot">Começar a foto em</span> <b id="edInicioTxt"></b></label>
+              <label for="edInicio"><span id="edInicioRot">A foto aparece em</span> <b id="edInicioTxt"></b></label>
               <input type="range" id="edInicio" min="0" max="10" step="0.04">
+              <span class="ajuda" id="edInicioAjuda">Se a foto entra antes da moldura terminar de se formar, arraste para a direita. A prévia mostra o quadro escolhido.</span>
             </div>
             <details class="avancado"><summary>A moldura não ficou certa?</summary>
               <p class="nota">Mexa na sensibilidade e detecte de novo. Papel creme: branco mínimo 235–240. Muito confete ou pétala: tolerância de cor 40+.</p>
@@ -106,7 +113,7 @@
               </div>
               <label class="check"><input type="checkbox" id="edFechar" checked> Juntar falhas pequenas na moldura</label>
               <div class="linha-bts"><button type="button" class="bt bt-linha" id="edDetectar">Detectar de novo</button><button type="button" class="bt bt-linha" id="edManual">Marcar moldura na mão</button></div>
-              <p class="nota" id="edManualAjuda" hidden>Arraste sobre a prévia, do canto de cima ao canto de baixo da moldura branca. A foto fica parada nesse lugar a partir do tempo escolhido.</p>
+              <p class="nota" id="edManualAjuda" hidden>Arraste sobre a prévia, de um canto ao outro da moldura. A foto fica parada nesse lugar a partir do tempo escolhido.</p>
             </details>
           </div>
           <p class="erro" id="edErro" hidden></p>

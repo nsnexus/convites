@@ -27,6 +27,12 @@
 .modelo-atual .campo{flex:1;margin:0}
 .ajustes{display:grid;gap:10px;max-width:420px;margin-top:14px}
 .ajustes label{display:grid;grid-template-columns:90px 1fr;align-items:center;font-size:.92rem;font-weight:500}
+.enquadro{position:relative;width:min(300px,78vw);margin-top:4px;border-radius:14px;overflow:hidden;background:#2a1730 no-repeat;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.enquadro:active{cursor:grabbing}
+.enquadro.circulo{border-radius:50%}
+.enquadro .grade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 33%,rgba(255,255,255,.35) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.35) 66.7%,transparent 67%),linear-gradient(transparent 33%,rgba(255,255,255,.35) 33.3%,transparent 33.6%,transparent 66.4%,rgba(255,255,255,.35) 66.7%,transparent 67%);opacity:0;transition:opacity .2s}
+.enquadro.mexendo .grade{opacity:1}
+.enquadro-dica{font-size:.88rem;color:var(--tinta-2)}
 input[type=range]{accent-color:var(--festa)}
 /* estilos */
 .estilos{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px}
@@ -119,9 +125,9 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
       <label class="bt bt-linha" id="btFoto" style="width:max-content;cursor:pointer">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
       <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado. A foto será enviada ao salvar o convite.</p>
       <div class="ajustes" id="ajustes" hidden>
-        <label>Aproximar<input type="range" id="zoom" min="1" max="2.5" step=".01" value="1"></label>
-        <label>Horizontal<input type="range" id="px" min="0" max="1" step=".01" value=".5"></label>
-        <label>Vertical<input type="range" id="py" min="0" max="1" step=".01" value=".5"></label>
+        <div class="enquadro" id="enquadro" role="img" aria-label="Enquadramento da foto na moldura"><div class="grade"></div></div>
+        <p class="enquadro-dica">Arraste a foto para posicionar. Para aproximar, abra dois dedos sobre ela (no computador, use a rodinha do mouse).</p>
+        <label>Aproximar<input type="range" id="zoom" min="1" max="3" step=".01" value="1"></label>
       </div>
       </div>
       <p class="dica so-casamento" style="margin-top:10px">O convite abre no envelope e as iniciais do casal aparecem no selo.</p>

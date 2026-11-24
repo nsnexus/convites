@@ -180,6 +180,7 @@ function selCategorias(atual) {
 const FPS = 24, ed = { arquivo: null, det: null, manual: null, total: 0 };
 const edV = $('edVideo');
 const modeloEd = { id: 'novo', fps: FPS, inicio: 1e9, quadros: [[0, 0, 0, 0]], forma: 'retangulo', chave: true, mascara: null, tipo: 'foto' };
+let formaEscolhida = 'auto', mascaraBlob = null;
 const ehSelo = () => modeloEd.tipo === 'selo';
 let edComp;
 
@@ -248,6 +249,7 @@ async function detectar() {
     } else {
       configurarInicio(r.inicio / FPS);
       $('edStatus').textContent = `Moldura encontrada. A foto aparece em ${(r.inicio / FPS).toFixed(1)} s. Confira na prévia.`;
+      await aplicarForma();
     }
     $('edPublicar').disabled = false; verFoto();
   } catch (err) {
@@ -279,9 +281,79 @@ function aplicarInicio() {
   else if (ed.det) { modeloEd.inicio = ini; modeloEd.quadros = ed.det.quadros.slice(ini - ed.det.inicio); }
   edComp?.desenhar();
 }
-$('edInicio').oninput = aplicarInicio;
-$('edInicio').onchange = () => verFoto();
-$('edForma').onchange = e => { modeloEd.forma = e.target.value; edComp?.desenhar(); };
+$('edInicio').oninput = () => { aplicarInicio(); mostrarMomento(); };
+$('edInicio').onchange = () => mostrarMomento();
+// pausa a prévia no momento escolhido (com a foto já inteira) para conferir
+function mostrarMomento() {
+  if (ehSelo()) { edV.pause(); edV.currentTime = Math.max(0, +$('edInicio').value - .3); return; }
+  edV.pause(); edV.currentTime = Math.min(edV.duration - .05, modeloEd.inicio / FPS + .45);
+}
+$('edForma').onchange = async e => { formaEscolhida = e.target.value; await aplicarForma(); edComp?.desenhar(); };
+
+// ---------- quadro parado do vídeo (não depende do player da prévia) ----------
+let vq = null;
+async function quadroEm(t) {
+  if (!vq || vq.src !== edV.src) {
+    vq = el('video', { muted: true, playsInline: true, preload: 'auto', src: edV.src });
+    await new Promise(ok => vq.addEventListener('loadeddata', ok, { once: true }));
+  }
+  t = Math.max(0, Math.min(vq.duration - .05, t));
+  await new Promise(ok => { const fim = () => ok(); vq.addEventListener('seeked', fim, { once: true }); setTimeout(fim, 2500); vq.currentTime = t; });
+  const c = el('canvas', { width: vq.videoWidth, height: vq.videoHeight }); c.getContext('2d').drawImage(vq, 0, 0); return c;
+}
+
+// ---------- formato automático: a foto ocupa só a área branca da moldura ----------
+// Pega um quadro com a moldura inteira, acha a região branca ligada ao centro e
+// fecha os buracos (confete, letras). Serve para círculo, coração, arco, qualquer forma.
+function gerarMascara(quadro, r) {
+  const N = 256, [x, y, w, h] = r, ix = w * .015, iy = h * .015;
+  const c = el('canvas', { width: N, height: N }), g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(quadro, (x + ix) * quadro.width, (y + iy) * quadro.height, (w - 2 * ix) * quadro.width, (h - 2 * iy) * quadro.height, 0, 0, N, N);
+  const px = g.getImageData(0, 0, N, N).data, lim = +$('edLimiar').value - 20, sat = +$('edSat').value + 14;
+  const branco = new Uint8Array(N * N);
+  for (let i = 0; i < N * N; i++) { const a = px[i * 4], b = px[i * 4 + 1], d = px[i * 4 + 2], mn = Math.min(a, b, d), mx = Math.max(a, b, d); branco[i] = mn >= lim && mx - mn <= sat ? 1 : 0; }
+  // ponto branco mais perto do centro
+  let ini = -1;
+  for (let raio = 0; raio < N * .3 && ini < 0; raio += 2) for (let a = 0; a < 6.3 && ini < 0; a += .2) {
+    const cx = Math.round(N / 2 + Math.cos(a) * raio), cy = Math.round(N / 2 + Math.sin(a) * raio);
+    if (cx >= 0 && cy >= 0 && cx < N && cy < N && branco[cy * N + cx]) ini = cy * N + cx;
+  }
+  if (ini < 0) return null;
+  const encher = (sementes, pode) => { const v = new Uint8Array(N * N), fila = [...sementes]; sementes.forEach(i => v[i] = 1);
+    while (fila.length) { const i = fila.pop(), cx = i % N, cy = (i / N) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue; const j = ny * N + nx; if (!v[j] && pode(j)) { v[j] = 1; fila.push(j); } } }
+    return v; };
+  const regiao = encher([ini], j => branco[j]);
+  // fora = tudo que chega na borda sem passar pela região; o resto (incluindo buracos) é a forma
+  const borda = []; for (let i = 0; i < N; i++) [i, (N - 1) * N + i, i * N, i * N + N - 1].forEach(j => !regiao[j] && borda.push(j));
+  const fora = encher(borda, j => !regiao[j]);
+  let area = 0; const out = g.createImageData(N, N);
+  for (let i = 0; i < N * N; i++) { const v = fora[i] ? 0 : 255; area += v ? 1 : 0; out.data[i * 4] = out.data[i * 4 + 1] = out.data[i * 4 + 2] = v; out.data[i * 4 + 3] = 255; }
+  area /= N * N;
+  if (area < .2) return null;          // achou pouca coisa: melhor não arriscar
+  if (area > .96) return 'retangulo';  // já é praticamente um retângulo
+  g.putImageData(out, 0, 0);
+  const f = el('canvas', { width: N, height: N }), gf = f.getContext('2d'); gf.filter = 'blur(1.2px)'; gf.drawImage(c, 0, 0);
+  return f;
+}
+async function aplicarForma() {
+  mascaraBlob = null; modeloEd.mascara = null;
+  if (ehSelo()) return;
+  if (formaEscolhida !== 'auto') { modeloEd.forma = formaEscolhida; return; }
+  modeloEd.forma = 'retangulo';
+  const r = ed.manual || modeloEd.quadros[modeloEd.quadros.length - 1];
+  if (!r || !r[2]) return;
+  const t = ed.manual ? ed.manualT : (ed.total - 2) / FPS;
+  try {
+    const m = gerarMascara(await quadroEm(t), r);
+    if (!m) { $('edStatus').textContent += ' Formato: não deu para ler o contorno, usei retângulo.'; return; }
+    if (m === 'retangulo') { $('edStatus').textContent += ' Formato: retângulo.'; return; }
+    mascaraBlob = await new Promise(ok => m.toBlob(ok, 'image/png'));
+    modeloEd.forma = 'mascara'; modeloEd.mascara = m.toDataURL('image/png');
+    edComp?.definirMascara(modeloEd.mascara);
+    $('edStatus').textContent += ' Formato: segue o contorno da moldura.';
+  } catch { modeloEd.forma = 'retangulo'; }
+}
 $('edChave').onchange = e => { modeloEd.chave = e.target.checked; edComp?.desenhar(); };
 $('edLimiar').oninput = e => $('edLimiarTxt').textContent = e.target.value;
 $('edSat').oninput = e => $('edSatTxt').textContent = e.target.value;
@@ -296,37 +368,54 @@ function erroEd(t) { $('edErro').textContent = t; $('edErro').hidden = false; }
 
 // marcação manual: arrastar um retângulo sobre o último quadro
 const mc = $('edMarcar');
-$('edManual').onclick = () => {
+$('edManual').onclick = async () => {
   if (!ed.arquivo) return erroEd('Escolha o vídeo primeiro.');
-  edV.pause(); edV.currentTime = ehSelo() ? 0 : edV.duration - .05;
-  mc.hidden = false; $('edManualAjuda').hidden = false;
-  mc.width = mc.clientWidth; mc.height = mc.clientHeight;
+  edV.pause();
+  mc.hidden = false; $('edManualAjuda').hidden = false; $('edQuadroBox').hidden = false;
+  const dpr = Math.min(2, devicePixelRatio || 1); mc.width = mc.clientWidth * dpr; mc.height = mc.clientHeight * dpr;
+  const q = $('edQuadro'); q.max = Math.max(0, edV.duration - .1).toFixed(2);
+  q.value = (ehSelo() ? 0 : Math.max(0, edV.duration - .3)).toFixed(2);
+  await mostrarQuadro();
   mc.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  avisar(ehSelo() ? 'Arraste sobre a prévia para marcar o selo.' : 'Arraste sobre a prévia para marcar a moldura.');
+
 };
-function sairManual() { mc.hidden = true; $('edManualAjuda').hidden = true; }
-let arrasto = null;
+function sairManual() { mc.hidden = true; $('edManualAjuda').hidden = true; $('edQuadroBox').hidden = true; }
+$('edQuadroSair').onclick = sairManual;
+let arrasto = null, fundo = null;
+async function mostrarQuadro() {
+  const t = +$('edQuadro').value; $('edQuadroTxt').textContent = `${t.toFixed(1)} s`;
+  fundo = await quadroEm(t); pintarMarca();
+}
+$('edQuadro').oninput = () => mostrarQuadro();
+// desenha o quadro como na prévia (cobrindo a tela 9:16) e o retângulo por cima
+function pintarMarca() {
+  const g = mc.getContext('2d'); g.clearRect(0, 0, mc.width, mc.height);
+  if (fundo) g.drawImage(fundo, 0, 0, mc.width, mc.height);
+  if (!arrasto) return;
+  const [[a, b], [c, d]] = arrasto;
+  g.fillStyle = 'rgba(232,51,109,.18)'; g.fillRect(Math.min(a, c) * mc.width, Math.min(b, d) * mc.height, Math.abs(c - a) * mc.width, Math.abs(d - b) * mc.height);
+  g.strokeStyle = '#E8336D'; g.lineWidth = 3 * (mc.width / mc.clientWidth); g.setLineDash([8, 6]); g.strokeRect(Math.min(a, c) * mc.width, Math.min(b, d) * mc.height, Math.abs(c - a) * mc.width, Math.abs(d - b) * mc.height);
+}
 const pos = e => { const r = mc.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
-mc.onpointerdown = e => { mc.setPointerCapture(e.pointerId); arrasto = [pos(e), pos(e)]; };
-mc.onpointermove = e => {
-  if (!arrasto) return; arrasto[1] = pos(e);
-  const g = mc.getContext('2d'), [[a, b], [c, d]] = arrasto; g.clearRect(0, 0, mc.width, mc.height);
-  g.strokeStyle = '#E8336D'; g.lineWidth = 3; g.setLineDash([8, 6]); g.strokeRect(Math.min(a, c) * mc.width, Math.min(b, d) * mc.height, Math.abs(c - a) * mc.width, Math.abs(d - b) * mc.height);
-};
-mc.onpointerup = () => {
+mc.onpointerdown = e => { e.preventDefault(); mc.setPointerCapture(e.pointerId); arrasto = [pos(e), pos(e)]; pintarMarca(); };
+mc.onpointermove = e => { if (!arrasto) return; e.preventDefault(); arrasto[1] = pos(e); pintarMarca(); };
+mc.onpointercancel = () => { arrasto = null; pintarMarca(); };
+mc.onpointerup = async () => {
   if (!arrasto) return; const [[a, b], [c, d]] = arrasto; arrasto = null;
-  if (Math.abs(c - a) < .05 || Math.abs(d - b) < .05) return;
+  if (Math.abs(c - a) < .05 || Math.abs(d - b) < .05) { pintarMarca(); return; }
   ed.manual = [Math.min(a, c), Math.min(b, d), Math.abs(c - a), Math.abs(d - b)].map(n => +n.toFixed(4));
+  ed.manualT = +$('edQuadro').value;
   ed.det = null; sairManual();
   if (ehSelo()) {
     configurarFim((ed.total - 1) / FPS, Math.min(2.5, (ed.total - 1) / FPS));
     $('edStatus').textContent = 'Selo marcado. Escolha até quando as iniciais aparecem (antes do selo quebrar).';
   } else {
-    configurarInicio(0); $('edInicio').value = Math.max(0, (ed.total - 2 * FPS) / FPS).toFixed(2); aplicarInicio();
+    configurarInicio(0); $('edInicio').value = Math.max(0, Math.min(ed.manualT, (ed.total - 2 * FPS) / FPS)).toFixed(2); aplicarInicio();
     $('edStatus').textContent = 'Moldura marcada. Escolha a partir de quando a foto aparece.';
+    await aplicarForma();
   }
   $('edErro').hidden = true;
-  $('edPublicar').disabled = false; verFoto();
+  $('edPublicar').disabled = false; mostrarMomento();
 };
 
 function enviarArquivo(url, corpo, tipo, aoProgredir) {
@@ -356,10 +445,12 @@ $('edPublicar').onclick = async () => {
     await enviarArquivo(links.video.envio, ed.arquivo, ed.arquivo.type || 'video/mp4', p => bt.textContent = `Enviando vídeo ${Math.round(p * 100)}%`);
     bt.textContent = 'Enviando capa…';
     await enviarArquivo(links.capa.envio, await gerarCapa(), 'image/jpeg');
+    let mascara_url = null;
+    if (modeloEd.forma === 'mascara' && mascaraBlob) { bt.textContent = 'Enviando formato…'; await enviarArquivo(links.mascara.envio, mascaraBlob, 'image/png'); mascara_url = links.mascara.publico; }
     bt.textContent = 'Salvando…';
     await api('modelos', { metodo: 'POST', corpo: {
       id: links.id, nome, categoria_id: $('edCat').value, video_url: links.video.publico, poster_url: links.capa.publico,
-      inicio: modeloEd.inicio, quadros: modeloEd.quadros, forma: ehSelo() ? 'circulo' : modeloEd.forma, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked, tipo: modeloEd.tipo,
+      inicio: modeloEd.inicio, quadros: modeloEd.quadros, forma: ehSelo() ? 'circulo' : (mascara_url ? 'mascara' : modeloEd.forma === 'mascara' ? 'retangulo' : modeloEd.forma), mascara_url, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked, tipo: modeloEd.tipo,
     } });
     avisar($('edExclusivo').checked ? 'Modelo exclusivo publicado. Escolha ele no pedido especial.' : 'Modelo publicado na vitrine.');
     $('editor').hidden = true; edV.pause(); $('edArquivo').value = ''; $('edNome').value = ''; $('edDeteccao').hidden = true;

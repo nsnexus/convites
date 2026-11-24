@@ -62,6 +62,8 @@ export class Compositor {
     this.temFoto = false; this.foto = null;
     if (modelo.mascara) this._img(modelo.mascara).then(im => this._tex(2, im));
     this.c.width = 720; this.c.height = 1280;
+    // depois de pular para outro ponto (vídeo pausado) o quadro novo só fica pronto no 'seeked'
+    ['seeked', 'loadeddata'].forEach(ev => video.addEventListener(ev, () => { if (!this.parado) this.desenhar(); }));
     this._loop = this._loop.bind(this); requestAnimationFrame(this._loop);
     // Quando o navegador permite, desenha exatamente no quadro que o vídeo está mostrando
     // (sem isso a foto pode usar a posição de um quadro e o vídeo mostrar o próximo: parece tremer).
@@ -81,6 +83,7 @@ export class Compositor {
     cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
     this.foto = cv; this._tex(1, cv); this.temFoto = true; this.desenhar();
   }
+  definirMascara(src) { if (!src) return; this._img(src).then(im => { this._tex(2, im); this.desenhar(); }).catch(() => {}); }
   trocarModelo(m) {
     this.m = m;
     if (m.mascara) this._img(m.mascara).then(im => this._tex(2, im));
