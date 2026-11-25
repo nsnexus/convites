@@ -1,4 +1,4 @@
-import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=0877c4a5';
+import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=528ded9f';
 import { ligarSuporte, ligarPrecos, carregarConfig } from './config.js?v=12104be8';
 
 const [dados] = await Promise.all([carregarModelos(), carregarConfig()]);

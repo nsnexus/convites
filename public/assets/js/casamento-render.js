@@ -55,11 +55,12 @@ export function renderizarCasamento(raiz, c, { modo = 'real', aoConfirmar } = {}
   // convite
   const textoConvite = b.convite?.texto || 'Com a bênção de Deus e de nossas famílias, temos a alegria de convidar você para celebrar conosco o dia em que uniremos nossas vidas.';
   main.append(h('section', { class: 'cs-sec' },
-    h('div', { class: 'cs-papel cs-convite rv papel' },
+    h('div', { class: 'cs-papel-caixa rv papel' },
       h('div', { class: 'cs-selo', 'aria-hidden': 'true' }, h('span', { text: iniciaisCasal(c) })),
+      h('div', { class: 'cs-papel cs-convite' },
       h('p', { text: textoConvite }),
       b.convite?.versiculo ? h('p', { class: 'cs-versiculo', text: b.convite.versiculo }) : null,
-      h('p', { class: 'cs-assina', text: `${n1} & ${n2}` }))));
+      h('p', { class: 'cs-assina', text: `${n1} & ${n2}` })))));
 
   // contagem
   if (b.contagem !== false) {

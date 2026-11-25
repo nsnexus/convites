@@ -38,7 +38,8 @@ void main(){
     float escura = 1. - smoothstep(.28, .55, lum);
     float sombra = texture2D(foto, uvf - vec2(.006, .006)).a * m * alfa;
     vec3 cavada = c.rgb * (1. - .38 * a) + vec3(1.) * max(0., luz - a) * .22;
-    vec3 relevo = c.rgb * (1. - .45 * max(0., sombra - a)) + a * (c.rgb * .85 + vec3(.16, .12, .09)) + vec3(1.) * max(0., luz - a) * .12;
+    // relevo discreto: a letra é a própria cera um pouco mais clara (sem puxar para o rosa), com sombra embaixo e brilho em cima
+    vec3 relevo = c.rgb * (1. - .5 * max(0., sombra - a)) * (1. + .32 * a) + vec3(.035) * a + vec3(1.) * max(0., luz - a) * .1;
     vec3 cor = mix(cavada, relevo, escura);
     gl_FragColor = vec4(cor, c.a);
     return;

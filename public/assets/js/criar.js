@@ -1,4 +1,4 @@
-import { carregarModelos } from './compositor.js?v=0877c4a5';
+import { carregarModelos } from './compositor.js?v=528ded9f';
 import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento, estiloDoModelo } from './estilos.js?v=d5c0644b';
 import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js?v=12104be8';
 

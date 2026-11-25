@@ -1,4 +1,4 @@
-import { Compositor, fotoExemplo } from './compositor.js?v=0877c4a5';
+import { Compositor, fotoExemplo } from './compositor.js?v=528ded9f';
 import { Rastreador } from './rastreador.js?v=d941cc90';
 import { reais } from './config.js?v=12104be8';
 import { ESTILOS } from './estilos.js?v=d5c0644b';
