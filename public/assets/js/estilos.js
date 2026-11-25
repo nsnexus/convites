@@ -25,6 +25,7 @@ export const ESTILOS = [
   { id: 'cas-bordo',   nome: 'Bordô',  grupo: 'casamento', cores: { fundo: '#f5ebe6', texto: '#4a1c22', destaque: '#7a1f2b' }, titulo: 'greatvibes', corpo: 'Cormorant Garamond' },
   { id: 'cas-salvia',  nome: 'Sálvia', grupo: 'casamento', cores: { fundo: '#edf1e8', texto: '#36443a', destaque: '#7d9471' }, titulo: 'pinyon',     corpo: 'Cormorant Garamond' },
   { id: 'cas-rose',    nome: 'Rosé',   grupo: 'casamento', cores: { fundo: '#f6e9ee', texto: '#5a3b4a', destaque: '#b0718c' }, titulo: 'pinyon',     corpo: 'Cormorant Garamond' },
+  { id: 'cas-marinho', nome: 'Marinho', grupo: 'casamento', cores: { fundo: '#eef0f4', texto: '#1d2540', destaque: '#a8843f' }, titulo: 'pinyon',     corpo: 'Cormorant Garamond' },
   { id: 'cas-marfim',  nome: 'Marfim', grupo: 'casamento', cores: { fundo: '#f8f4ec', texto: '#2f2a24', destaque: '#a6874f' }, titulo: 'italiana',   corpo: 'Cormorant Garamond' },
 ];
 
@@ -97,6 +98,8 @@ export function carregarFontes(lista) {
 }
 
 // Personalização inicial de um convite novo
+// estilo sugerido do modelo (casamentos combinam a página com as cores do vídeo)
+export const estiloDoModelo = m => m?.estilo || ESTILO_DA_CATEGORIA[m?.categoria] || (m?.tipo === 'selo' ? 'cas-bordo' : 'classico');
 export function personalizacaoPadrao(categoria) {
   return {
     estilo: ESTILO_DA_CATEGORIA[categoria] || 'classico', cores: { destaque: '', fundo: '' }, fonte: '',

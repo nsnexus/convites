@@ -4,8 +4,10 @@ import { ehNossoArquivo } from '../../_lib/arquivos.js';
 const validarQuadros = (q) => Array.isArray(q) && q.length > 0 && q.length < 2000 &&
   q.every(r => Array.isArray(r) && r.length === 4 && r.every(n => typeof n === 'number' && n >= -0.1 && n <= 1.1));
 
+const estiloValido = e => (typeof e === 'string' && /^[a-z-]{2,20}$/.test(e)) ? e : null;
+
 export async function onRequestGet({ env }) {
-  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, mascara_url, chave, quadros, tipo, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
+  const ms = await todos(env, 'SELECT id, nome, categoria_id, video_url, poster_url, inicio, forma, mascara_url, chave, quadros, tipo, estilo, ativo, exclusivo, ordem, criado_em FROM modelos ORDER BY ordem, criado_em');
   return json(ms.map(m => ({ ...m, ativo: !!m.ativo, exclusivo: !!m.exclusivo, chave: !!m.chave, quadros: JSON.parse(m.quadros || '[]') })));
 }
 
@@ -21,10 +23,10 @@ export async function onRequestPost({ request, env }) {
   const tipo = b.tipo === 'selo' ? 'selo' : 'foto';
   const mascara = b.forma === 'mascara' && ehNossoArquivo(env, b.mascara_url) ? b.mascara_url : null;
   const forma = mascara ? 'mascara' : b.forma === 'circulo' ? 'circulo' : 'retangulo';
-  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, mascara_url, chave, quadros, exclusivo, ativo, ordem, tipo)
-    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+  await rodar(env, `INSERT INTO modelos (id, nome, categoria_id, video_url, poster_url, fps, inicio, forma, mascara_url, chave, quadros, exclusivo, ativo, ordem, tipo, estilo)
+    VALUES (?, ?, ?, ?, ?, 24, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
     id, nome, b.categoria_id ? limpo(b.categoria_id) : null, b.video_url, b.poster_url, Math.max(0, b.inicio | 0),
-    forma, mascara, bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1, tipo);
+    forma, mascara, bool(b.chave !== false), JSON.stringify(b.quadros), bool(b.exclusivo), (ult?.o ?? 0) + 1, tipo, estiloValido(b.estilo));
   return json({ id });
 }
 
@@ -35,6 +37,7 @@ export async function onRequestPatch({ request, env }) {
   if (b.categoria_id !== undefined) c.categoria_id = b.categoria_id ? limpo(b.categoria_id) : null;
   for (const k of ['ativo', 'exclusivo', 'chave']) if (b[k] != null) c[k] = bool(b[k]);
   if (b.ordem != null) c.ordem = b.ordem | 0;
+  if (b.estilo !== undefined) c.estilo = estiloValido(b.estilo);
   if (b.forma != null) {
     const mascara = b.forma === 'mascara' && ehNossoArquivo(env, b.mascara_url) ? b.mascara_url : null;
     c.forma = mascara ? 'mascara' : b.forma === 'circulo' ? 'circulo' : 'retangulo'; c.mascara_url = mascara;

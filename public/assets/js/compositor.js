@@ -33,7 +33,13 @@ void main(){
     vec2 uvf = l * fotoUV.xy + fotoUV.zw;
     float a = f.a * m * alfa;
     float luz = texture2D(foto, uvf + vec2(.006, .006)).a * m * alfa;
-    vec3 cor = c.rgb * (1. - .38 * a) + vec3(1.) * max(0., luz - a) * .22;
+    // cera clara: letra cavada (escurece). Cera escura: letra em relevo (clareia, com sombra embaixo).
+    float lum = dot(c.rgb, vec3(.299, .587, .114));
+    float escura = 1. - smoothstep(.28, .55, lum);
+    float sombra = texture2D(foto, uvf - vec2(.006, .006)).a * m * alfa;
+    vec3 cavada = c.rgb * (1. - .38 * a) + vec3(1.) * max(0., luz - a) * .22;
+    vec3 relevo = c.rgb * (1. - .45 * max(0., sombra - a)) + a * (c.rgb * .85 + vec3(.16, .12, .09)) + vec3(1.) * max(0., luz - a) * .12;
+    vec3 cor = mix(cavada, relevo, escura);
     gl_FragColor = vec4(cor, c.a);
     return;
   }

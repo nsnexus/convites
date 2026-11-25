@@ -1,7 +1,7 @@
-import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=31afcda2';
-import { renderizarConvite, tituloDe } from './convite-render.js?v=906fc5c6';
-import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js?v=25258e0a';
-import { ehCasamento } from './estilos.js?v=89817aef';
+import { Compositor, carregarModelos, fotoExemplo } from './compositor.js?v=0877c4a5';
+import { renderizarConvite, tituloDe } from './convite-render.js?v=74648e59';
+import { renderizarCasamento, iniciaisCasal, nomesCasal } from './casamento-render.js?v=6e540b5e';
+import { ehCasamento } from './estilos.js?v=d5c0644b';
 import { CONFIG, reais } from './config.js?v=12104be8';
 
 const $ = id => document.getElementById(id);

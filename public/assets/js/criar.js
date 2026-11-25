@@ -1,5 +1,5 @@
-import { carregarModelos } from './compositor.js?v=31afcda2';
-import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento } from './estilos.js?v=89817aef';
+import { carregarModelos } from './compositor.js?v=0877c4a5';
+import { ESTILOS, FONTES, estiloPorId, personalizacaoPadrao, carregarFontes, ehCasamento, estiloDoModelo } from './estilos.js?v=d5c0644b';
 import { CONFIG, reais, ligarSuporte, ligarPrecos, carregarConfig } from './config.js?v=12104be8';
 
 const $ = id => document.getElementById(id);
@@ -27,7 +27,7 @@ if (slugEditar) {
 }
 
 let modelo = dados.modelos.find(m => m.id === (existente?.modelo || especial?.modelo?.id || qs.get('modelo'))) || dados.modelos[0];
-let pers = existente?.personalizacao?.estilo ? mesclar(personalizacaoPadrao(modelo.categoria), existente.personalizacao) : personalizacaoPadrao(modelo.categoria);
+let pers = existente?.personalizacao?.estilo ? mesclar(personalizacaoPadrao(modelo.categoria), existente.personalizacao) : { ...personalizacaoPadrao(modelo.categoria), estilo: estiloDoModelo(modelo) };
 let ajuste = existente?.ajuste || { zoom: 1, x: .5, y: .5 };
 let fotoSrc = existente?.foto_url || sessionStorage.getItem('fotoTeste') || null, arquivoFoto = null;
 if (!existente && fotoSrc) arquivoFoto = await (await fetch(fotoSrc)).blob();
@@ -123,7 +123,7 @@ $('escolha').addEventListener('click', e => { if (e.target === $('escolha')) fec
 mostrarModeloAtual();
 function aplicarModo() {
   const cas = ehCasamento(modelo);
-  if (cas !== (pers.estilo || '').startsWith('cas-')) { pers.estilo = cas ? 'cas-bordo' : 'classico'; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
+  if (cas !== (pers.estilo || '').startsWith('cas-')) { pers.estilo = estiloDoModelo(modelo); pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   document.body.classList.toggle('modo-casamento', cas);
   $('tit2').textContent = cas ? 'O casal e a cerimônia' : 'A festa';
   $('rotHora').textContent = cas ? 'Horário da cerimônia' : 'Horário';
@@ -137,9 +137,9 @@ function aplicarModo() {
 }
 $('modelo').onchange = e => {
   const novo = dados.modelos.find(m => m.id === e.target.value);
-  if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
+  if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = estiloDoModelo(novo); pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   // se o cliente ainda não mexeu no estilo, acompanha a categoria do vídeo
-  if (pers.estilo === personalizacaoPadrao(modelo.categoria).estilo) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
+  if (pers.estilo === estiloDoModelo(modelo)) { pers.estilo = estiloDoModelo(novo); pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
   modelo = novo; $('modeloCapa').src = modelo.poster; mostrarModeloAtual(); aplicarModo(); pintarEnquadro(); atualizar('video');
 };
 if (existente) { $('btFoto').hidden = true; $('fotoInfo').textContent = 'A foto não pode ser trocada depois do pedido, mas você pode ajustar o enquadramento.'; $('ajustes').hidden = false; }

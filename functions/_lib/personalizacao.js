@@ -1,7 +1,7 @@
 // Valida e normaliza a personalização do convite (estilo, cores, fontes e blocos).
 export const ESTILOS = ['classico', 'princesa', 'jardim', 'minimal', 'neon', 'ingresso', 'esportivo', 'hq', 'aquarela', 'rustico',
   'linho', 'mono', 'areia', 'salvia', 'sereno', 'rose', 'grafite', 'oliva', 'lavanda', 'noite',
-  'cas-salvia', 'cas-bordo', 'cas-rose', 'cas-marfim'];
+  'cas-salvia', 'cas-bordo', 'cas-rose', 'cas-marfim', 'cas-marinho'];
 export const FONTES = ['', 'cormorant', 'playfair', 'dancing', 'bebas', 'bangers', 'unbounded', 'fredoka', 'amatic', 'pacifico', 'montserrat', 'greatvibes', 'pinyon', 'italiana'];
 
 const cor = (v) => (/^#[0-9a-f]{6}$/i.test(String(v || '')) ? String(v).toLowerCase() : '');

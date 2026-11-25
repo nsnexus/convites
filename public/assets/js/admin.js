@@ -1,6 +1,7 @@
-import { Compositor, fotoExemplo } from './compositor.js?v=31afcda2';
+import { Compositor, fotoExemplo } from './compositor.js?v=0877c4a5';
 import { Rastreador } from './rastreador.js?v=d941cc90';
 import { reais } from './config.js?v=12104be8';
+import { ESTILOS } from './estilos.js?v=d5c0644b';
 
 const $ = id => document.getElementById(id);
 const el = (tag, props = {}, ...filhos) => { const e = Object.assign(document.createElement(tag), props); e.append(...filhos.filter(f => f != null)); return e; };
@@ -186,6 +187,7 @@ let formaEscolhida = 'auto', mascaraBlob = null;
 const ehSelo = () => modeloEd.tipo === 'selo';
 let edComp;
 
+ESTILOS.forEach(e => $('edEstilo').append(new Option(`${e.nome}${e.grupo === 'casamento' ? ' (casamento)' : ''}`, e.id)));
 function prepararCategorias() {
   const s = $('edCat'); s.length = 0;
   categorias.forEach(c => s.append(new Option(c.nome, c.id)));
@@ -254,7 +256,7 @@ async function abrirEdicao(m) {
   ed.editando = m; ed.arquivo = { existente: true }; ed.det = null; ed.manual = null; mascaraBlob = null;
   $('edTitulo').textContent = `Editando: ${m.nome}`; $('edPublicar').textContent = 'Salvar alterações';
   $('edArquivo').closest('label').hidden = true;
-  $('edNome').value = m.nome; $('edCat').value = m.categoria_id || ''; $('edExclusivo').checked = !!m.exclusivo;
+  $('edNome').value = m.nome; $('edCat').value = m.categoria_id || ''; $('edEstilo').value = m.estilo || ''; $('edExclusivo').checked = !!m.exclusivo;
   $('edTipo').value = m.tipo || 'foto'; modeloEd.tipo = $('edTipo').value;
   const selo = ehSelo();
   $('edCampoForma').hidden = selo; $('edChave').closest('label').hidden = selo;
@@ -538,7 +540,7 @@ $('edPublicar').onclick = async () => {
     bt.textContent = 'Salvando…';
     await api('modelos', { metodo: 'POST', corpo: {
       id: links.id, nome, categoria_id: $('edCat').value, video_url: links.video.publico, poster_url: links.capa.publico,
-      inicio: modeloEd.inicio, quadros: modeloEd.quadros, forma: ehSelo() ? 'circulo' : (mascara_url ? 'mascara' : modeloEd.forma === 'mascara' ? 'retangulo' : modeloEd.forma), mascara_url, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked, tipo: modeloEd.tipo,
+      inicio: modeloEd.inicio, quadros: modeloEd.quadros, estilo: $('edEstilo').value, forma: ehSelo() ? 'circulo' : (mascara_url ? 'mascara' : modeloEd.forma === 'mascara' ? 'retangulo' : modeloEd.forma), mascara_url, chave: modeloEd.chave, exclusivo: $('edExclusivo').checked, tipo: modeloEd.tipo,
     } });
     avisar($('edExclusivo').checked ? 'Modelo exclusivo publicado. Escolha ele no pedido especial.' : 'Modelo publicado na vitrine.');
     $('editor').hidden = true; edV.pause(); $('edArquivo').value = ''; $('edNome').value = ''; $('edDeteccao').hidden = true;
@@ -558,7 +560,7 @@ async function salvarEdicao(nome, bt) {
     }
     bt.textContent = 'Salvando…';
     await api('modelos', { metodo: 'PATCH', corpo: {
-      id: m.id, nome, categoria_id: $('edCat').value, exclusivo: $('edExclusivo').checked, chave: modeloEd.chave,
+      id: m.id, nome, categoria_id: $('edCat').value, estilo: $('edEstilo').value, exclusivo: $('edExclusivo').checked, chave: modeloEd.chave,
       quadros: modeloEd.quadros, inicio: modeloEd.inicio, aplicarMoldura: true,
       forma: ehSelo() ? 'circulo' : (mascara_url ? 'mascara' : modeloEd.forma === 'mascara' ? 'retangulo' : modeloEd.forma), mascara_url,
     } });
