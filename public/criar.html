@@ -22,9 +22,35 @@
 .etapa>h2{font-size:1.5rem;margin-bottom:4px;display:flex;gap:12px;align-items:baseline}
 .etapa>h2 span{font:800 1rem var(--disp);color:var(--festa)}
 .etapa>p.dica{color:var(--tinta-2);font-size:.94rem;margin-bottom:18px}
-.modelo-atual{display:flex;gap:14px;align-items:center;margin-bottom:18px}
-.modelo-atual img{width:56px;height:100px;object-fit:cover;border-radius:10px;background:var(--lilas)}
-.modelo-atual .campo{flex:1;margin:0}
+.modelo-atual{display:flex;gap:16px;align-items:center;margin-bottom:18px;padding:12px;border-radius:18px;background:var(--branco,#fff);box-shadow:0 1px 0 rgba(36,18,48,.06),0 8px 24px -16px rgba(36,18,48,.35)}
+.modelo-atual img{width:72px;height:128px;object-fit:cover;border-radius:12px;background:var(--lilas);flex:none}
+.modelo-info{display:grid;gap:3px;justify-items:start;min-width:0}
+.modelo-rot{font-size:.8rem;color:var(--tinta-2)}
+.modelo-info b{font-size:1.15rem;line-height:1.2}
+.modelo-cat{font-size:.85rem;color:var(--tinta-2);margin-bottom:8px}
+.modelo-info .bt{padding:.55em 1em;font-size:.92rem}
+.modelo-info .bt[disabled]{display:none}
+.galeria{border:0;padding:0;width:min(720px,100vw);max-width:100vw;max-height:88svh;margin:auto auto 0;border-radius:22px 22px 0 0;background:var(--fundo,#fbf7fc);color:var(--tinta);display:none;flex-direction:column;overflow:hidden}
+.galeria[open]{display:flex;animation:galSobe .35s cubic-bezier(.2,.8,.2,1)}
+@media (min-width:760px){.galeria{margin:auto;border-radius:22px}}
+.galeria::backdrop{background:rgba(26,10,34,.55);backdrop-filter:blur(3px)}
+@keyframes galSobe{from{transform:translateY(40px);opacity:0}}
+.gal-topo{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px}
+.gal-topo h3{margin:0;font-size:1.25rem}
+.gal-fechar{border:0;background:var(--lilas);width:38px;height:38px;border-radius:50%;font-size:1rem;cursor:pointer;color:var(--tinta)}
+.gal-cats{display:flex;gap:8px;overflow-x:auto;padding:10px 20px 14px;scrollbar-width:none}
+.gal-cats::-webkit-scrollbar{display:none}
+.gal-cats button{flex:none;border:1.5px solid rgba(36,18,48,.14);background:transparent;color:var(--tinta);border-radius:999px;padding:.5em 1em;font:600 .9rem var(--corpo,inherit);cursor:pointer}
+.gal-cats button[aria-selected=true]{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.gal-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:12px;padding:4px 20px 28px;overflow-y:auto}
+.gal-item{border:0;padding:0;background:none;text-align:left;cursor:pointer;color:inherit;font:inherit}
+.gal-item .capa{position:relative;display:block;aspect-ratio:9/16;border-radius:14px;overflow:hidden;background:var(--lilas);outline:3px solid transparent;outline-offset:2px;transition:outline-color .2s,transform .2s}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block}
+.gal-item:hover .capa{transform:translateY(-2px)}
+.gal-item[aria-pressed=true] .capa{outline-color:var(--destaque-adm,#E8336D)}
+.gal-item[aria-pressed=true] .capa::after{content:'✓';position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:var(--destaque-adm,#E8336D);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.gal-item .nome{display:block;font-size:.88rem;font-weight:600;margin-top:7px;line-height:1.25}
+.gal-item .preco{display:block;font-size:.78rem;color:var(--tinta-2)}
 .ajustes{display:grid;gap:10px;max-width:420px;margin-top:14px}
 .ajustes label{display:grid;grid-template-columns:90px 1fr;align-items:center;font-size:.92rem;font-weight:500}
 .enquadro{position:relative;width:min(300px,78vw);margin-top:4px;border-radius:14px;overflow:hidden;background:#2a1730 no-repeat;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
@@ -120,7 +146,17 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
     <section class="etapa">
       <h2><span>1</span>Abertura e foto</h2>
       <p class="dica so-festa">O vídeo abre o convite e termina com a foto na moldura.</p>
-      <div class="modelo-atual"><img id="modeloCapa" alt=""><div class="campo"><label for="modelo">Abertura</label><select id="modelo"></select></div></div>
+      <div class="modelo-atual">
+        <img id="modeloCapa" alt="">
+        <div class="modelo-info"><span class="modelo-rot">Abertura</span><b id="modeloNome"></b><span id="modeloCat" class="modelo-cat"></span>
+          <button type="button" class="bt bt-linha" id="trocarModelo">Trocar abertura</button></div>
+        <select id="modelo" hidden aria-hidden="true" tabindex="-1"></select>
+      </div>
+      <dialog id="galeria" class="galeria" aria-labelledby="galTit">
+        <div class="gal-topo"><h3 id="galTit">Escolha a abertura</h3><button type="button" class="gal-fechar" id="galFechar" aria-label="Fechar">✕</button></div>
+        <div class="gal-cats" id="galCats" role="tablist"></div>
+        <div class="gal-grade" id="galGrade"></div>
+      </dialog>
       <div class="so-festa">
       <label class="bt bt-linha" id="btFoto" style="width:max-content;cursor:pointer">Escolher foto<input type="file" id="foto" accept="image/*" hidden></label>
       <p class="ajuda" id="fotoInfo" style="color:var(--tinta-2);font-size:.9rem;margin-top:8px">Prefira foto vertical, com o rosto bem iluminado. A foto será enviada ao salvar o convite.</p>
@@ -235,6 +271,6 @@ body:not(.modo-casamento) .so-casamento,body.modo-casamento .so-festa{display:no
   </form>
 </div>
 </main>
-<script type="module" src="/assets/js/criar.js?v=124f8f8c"></script>
+<script type="module" src="/assets/js/criar.js?v=8c6093bb"></script>
 </body>
 </html>

@@ -82,8 +82,35 @@ dados.categorias.forEach(c => {
   $('modelo').append(g);
 });
 if (!$('modelo').value || ![...$('modelo').options].some(o => o.value === modelo.id)) $('modelo').append(new Option(modelo.nome, modelo.id, true, true));
-if (especial?.modelo || existente) $('modelo').disabled = true;
+if (especial?.modelo || existente) { $('modelo').disabled = true; $('trocarModelo').disabled = true; }
 $('modeloCapa').src = modelo.poster;
+
+// ---------- galeria de aberturas (no lugar da lista do celular) ----------
+const nomeCat = id => dados.categorias.find(c => c.id === id)?.nome || '';
+function mostrarModeloAtual() { $('modeloNome').textContent = modelo.nome; $('modeloCat').textContent = nomeCat(modelo.categoria); $('modeloCapa').alt = modelo.nome; }
+let catGaleria = null;
+function pintarGaleria() {
+  const cats = dados.categorias.filter(c => dados.modelos.some(m => m.categoria === c.id));
+  $('galCats').replaceChildren(...[{ id: null, nome: 'Todas' }, ...cats].map(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = c.nome;
+    b.setAttribute('aria-selected', String(catGaleria === c.id)); b.onclick = () => { catGaleria = c.id; pintarGaleria(); }; return b;
+  }));
+  const lista = dados.modelos.filter(m => !catGaleria || m.categoria === catGaleria);
+  $('galGrade').replaceChildren(...lista.map(m => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gal-item'; b.setAttribute('aria-pressed', String(m.id === modelo.id));
+    const capa = document.createElement('span'); capa.className = 'capa';
+    const im = document.createElement('img'); im.src = m.poster; im.alt = ''; im.loading = 'lazy'; capa.append(im);
+    const nm = document.createElement('span'); nm.className = 'nome'; nm.textContent = m.nome;
+    const pr = document.createElement('span'); pr.className = 'preco'; pr.textContent = catGaleria ? '' : nomeCat(m.categoria);
+    b.append(capa, nm, pr);
+    b.onclick = () => { $('modelo').value = m.id; $('modelo').dispatchEvent(new Event('change')); $('galeria').close(); };
+    return b;
+  }));
+}
+$('trocarModelo').onclick = () => { catGaleria = modelo.categoria; pintarGaleria(); $('galeria').showModal(); $('galGrade').scrollTop = 0; };
+$('galFechar').onclick = () => $('galeria').close();
+$('galeria').addEventListener('click', e => { if (e.target === $('galeria')) $('galeria').close(); });
+mostrarModeloAtual();
 function aplicarModo() {
   const cas = ehCasamento(modelo);
   if (cas !== (pers.estilo || '').startsWith('cas-')) { pers.estilo = cas ? 'cas-bordo' : 'classico'; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
@@ -103,7 +130,7 @@ $('modelo').onchange = e => {
   if (ehCasamento(novo) !== ehCasamento(modelo)) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pers.fonte = ''; }
   // se o cliente ainda não mexeu no estilo, acompanha a categoria do vídeo
   if (pers.estilo === personalizacaoPadrao(modelo.categoria).estilo) { pers.estilo = personalizacaoPadrao(novo.categoria).estilo; pers.cores = { destaque: '', fundo: '' }; pintarEstilos(); }
-  modelo = novo; $('modeloCapa').src = modelo.poster; aplicarModo(); pintarEnquadro(); atualizar('video');
+  modelo = novo; $('modeloCapa').src = modelo.poster; mostrarModeloAtual(); aplicarModo(); pintarEnquadro(); atualizar('video');
 };
 if (existente) { $('btFoto').hidden = true; $('fotoInfo').textContent = 'A foto não pode ser trocada depois do pedido, mas você pode ajustar o enquadramento.'; $('ajustes').hidden = false; }
 else if (fotoSrc) { $('ajustes').hidden = false; $('fotoInfo').textContent = 'Usando a foto que você testou na página inicial.'; }
