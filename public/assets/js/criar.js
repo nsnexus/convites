@@ -88,28 +88,38 @@ $('modeloCapa').src = modelo.poster;
 // ---------- galeria de aberturas (no lugar da lista do celular) ----------
 const nomeCat = id => dados.categorias.find(c => c.id === id)?.nome || '';
 function mostrarModeloAtual() { $('modeloNome').textContent = modelo.nome; $('modeloCat').textContent = nomeCat(modelo.categoria); $('modeloCapa').alt = modelo.nome; }
-let catGaleria = null;
+let catGaleria = null, emFoco = null;
+// toca o vídeo da abertura em foco no topo da janela
+function focar(m) {
+  emFoco = m;
+  const v = $('escVideo'); if (v.dataset.id !== m.id) { v.dataset.id = m.id; v.poster = m.poster; v.src = m.video; v.play().catch(() => {}); }
+  $('escNome').textContent = m.nome; $('escCat').textContent = nomeCat(m.categoria);
+  const atual = m.id === modelo.id; $('escUsar').hidden = atual; $('escAtual').hidden = !atual;
+  $('escGrade').querySelectorAll('.esc-item').forEach(b => b.setAttribute('aria-current', String(b.dataset.id === m.id)));
+}
 function pintarGaleria() {
   const cats = dados.categorias.filter(c => dados.modelos.some(m => m.categoria === c.id));
-  $('galCats').replaceChildren(...[{ id: null, nome: 'Todas' }, ...cats].map(c => {
-    const b = document.createElement('button'); b.type = 'button'; b.role = 'tab'; b.textContent = c.nome;
+  $('escCats').replaceChildren(...[{ id: null, nome: 'Todas' }, ...cats].map(c => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = c.nome;
     b.setAttribute('aria-selected', String(catGaleria === c.id)); b.onclick = () => { catGaleria = c.id; pintarGaleria(); }; return b;
   }));
   const lista = dados.modelos.filter(m => !catGaleria || m.categoria === catGaleria);
-  $('galGrade').replaceChildren(...lista.map(m => {
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'gal-item'; b.setAttribute('aria-pressed', String(m.id === modelo.id));
+  $('escGrade').replaceChildren(...lista.map(m => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'esc-item' + (m.id === modelo.id ? ' escolhido' : ''); b.dataset.id = m.id;
+    b.setAttribute('aria-current', String(emFoco?.id === m.id)); b.setAttribute('aria-label', `Ver a abertura ${m.nome}`);
     const capa = document.createElement('span'); capa.className = 'capa';
     const im = document.createElement('img'); im.src = m.poster; im.alt = ''; im.loading = 'lazy'; capa.append(im);
     const nm = document.createElement('span'); nm.className = 'nome'; nm.textContent = m.nome;
-    const pr = document.createElement('span'); pr.className = 'preco'; pr.textContent = catGaleria ? '' : nomeCat(m.categoria);
-    b.append(capa, nm, pr);
-    b.onclick = () => { $('modelo').value = m.id; $('modelo').dispatchEvent(new Event('change')); $('galeria').close(); };
+    b.append(capa, nm); b.onclick = () => focar(m);
     return b;
   }));
 }
-$('trocarModelo').onclick = () => { catGaleria = modelo.categoria; pintarGaleria(); $('galeria').showModal(); $('galGrade').scrollTop = 0; };
-$('galFechar').onclick = () => $('galeria').close();
-$('galeria').addEventListener('click', e => { if (e.target === $('galeria')) $('galeria').close(); });
+function fecharGaleria() { $('escolha').close(); }
+$('escolha').addEventListener('close', () => { const v = $('escVideo'); v.pause(); });
+$('escUsar').onclick = () => { if (!emFoco) return; $('modelo').value = emFoco.id; $('modelo').dispatchEvent(new Event('change')); fecharGaleria(); };
+$('trocarModelo').onclick = () => { catGaleria = modelo.categoria; pintarGaleria(); focar(modelo); $('escolha').showModal(); $('escGrade').scrollTop = 0; };
+$('escFechar').onclick = fecharGaleria;
+$('escolha').addEventListener('click', e => { if (e.target === $('escolha')) fecharGaleria(); });
 mostrarModeloAtual();
 function aplicarModo() {
   const cas = ehCasamento(modelo);
