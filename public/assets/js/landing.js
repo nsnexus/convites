@@ -71,6 +71,15 @@ function pintarGaleria() {
   pararPrevia(); trilho.replaceChildren();
   const modelos = dados.modelos.filter(m => !categoria || m.categoria === categoria);
   document.getElementById('modelosResumo').textContent = modelos.length + (modelos.length === 1 ? ' modelo' : ' modelos');
+  // primeiro cartão: convite exclusivo, feito do zero (vai para o WhatsApp)
+  const nomeCat = categorias[categoria];
+  const esp = document.createElement('article'); esp.className = 'galeria-card galeria-especial';
+  esp.innerHTML = `<div class="galeria-media"><div class="esp-arte" aria-hidden="true"><i></i><i></i><i></i><span>✦</span></div>
+    <div class="esp-chamada"><small>Feito só para você</small><strong>Seu tema, do seu jeito</strong></div></div>
+    <div class="galeria-texto"><h3>Convite exclusivo</h3><p>Abertura criada do zero${nomeCat ? ` para ${nomeCat.toLowerCase()}` : ''} · sob orçamento</p>
+    <a data-zap="" href="#precos">Pedir o meu</a></div>`;
+  esp.querySelector('[data-zap]').dataset.zap = `Olá! Quero um convite exclusivo${nomeCat ? ` de ${nomeCat}` : ''}, feito do zero.`;
+  trilho.append(esp); ligarSuporte(esp);
   modelos.forEach(m => {
     const card = document.createElement('article'); card.className = 'galeria-card';
     const media = document.createElement('div'); media.className = 'galeria-media';
